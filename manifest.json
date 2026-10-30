@@ -1,0 +1,20 @@
+{
+  "name": "الشرقاط الثقافي الأول وطقس الشرقاط",
+  "short_name": "الشرقاط الثقافي",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121824",
+  "theme_color": "#0d2137",
+  "icons": [
+    {
+      "src": "acon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "acon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
