@@ -4,8 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d2137">
+<meta name="description" content="تطبيق رسمي لعرض حالة الطقس المباشرة والتوقعات في قضاء الشرقاط">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="الشرقاط الثقافي">
 <title>طقس الشرقاط المباشر</title>
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&display=swap" rel="stylesheet">
@@ -338,7 +345,7 @@ async function load(){
   if(Number.isFinite(wCl))eff=(eff+wCl)/2;
 
   const sym=symOf(cur);
-  let kind=kindOf(sym);
+  const kind=kindOf(sym);
   const precip=precipOf(cur);
 
   /* الحرارة المحسوسة (معادلة Steadman) */
@@ -719,6 +726,13 @@ $("ref").addEventListener("click",()=>{
  setTimeout(()=>r.classList.remove("spin"),600);
  load();
 });
+
+/* تسجيل الـ Service Worker (مطلوب لتطبيق PWA) */
+if("serviceWorker"in navigator){
+ window.addEventListener("load",()=>{
+  navigator.serviceWorker.register("./sw.js").catch(err=>console.error("SW:",err));
+ });
+}
 
 setInterval(load,10*60*1000);
 size();
