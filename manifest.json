@@ -1,6 +1,7 @@
 {
   "name": "الشرقاط الثقافي الأول وطقس الشرقاط",
   "short_name": "الشرقاط الثقافي",
+  "description": "تطبيق رسمى لعرض حالة الطقس المباشرة والتوقعات في قضاء الشرقاط",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#121824",
