@@ -1,4 +1,4 @@
-const CACHE = 'sharqat-v2';
+const CACHE = 'sharqat-v3';
 const FILES = [
   './',
   './index.html',
@@ -12,7 +12,7 @@ const FILES = [
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE).then((c) =>
-      Promise.all(FILES.map((f) => c.add(f).catch(() => null)))
+      Promise.all(FILES.map((f) => c.add(new Request(f, { cache: 'reload' })).catch(() => null)))
     )
   );
   self.skipWaiting();
@@ -34,36 +34,20 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (!/^https?:$/.test(url.protocol)) return;
 
-  const sameOrigin = url.origin === self.location.origin;
-
-  if (sameOrigin) {
-    /* ملفات الموقع: من الكاش فوراً، وتتحدث بالخلفية */
-    e.respondWith(
-      caches.match(req).then((cached) => {
-        const fresh = fetch(req)
-          .then((res) => {
-            if (res && res.ok) {
-              const copy = res.clone();
-              caches.open(CACHE).then((c) => c.put(req, copy));
-            }
-            return res;
-          })
-          .catch(() => cached || (req.mode === 'navigate' ? caches.match('./index.html') : undefined));
-        return cached || fresh;
+  /* الإنترنت أولاً لكل الطلبات، والكاش فقط عند انقطاع الاتصال */
+  e.respondWith(
+    fetch(req, { cache: 'no-store' })
+      .then((res) => {
+        if (res && (res.ok || res.type === 'opaque')) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
+        }
+        return res;
       })
-    );
-  } else {
-    /* خارجي (الطقس والخطوط): الإنترنت أولاً، وعند الانقطاع آخر نسخة محفوظة */
-    e.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (res && (res.ok || res.type === 'opaque')) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
-  }
+      .catch(() =>
+        caches.match(req, { ignoreSearch: true }).then((cached) =>
+          cached || (req.mode === 'navigate' ? caches.match('./index.html') : undefined)
+        )
+      )
+  );
 });
