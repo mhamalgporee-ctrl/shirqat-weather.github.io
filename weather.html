@@ -41,6 +41,13 @@ body{margin:0;padding:12px;font-family:Tahoma,Arial,sans-serif;background:var(--
 .forecast-day{font-weight:800;font-size:.9rem;display:block}
 .forecast-desc{color:var(--muted);font-size:.8rem}
 .forecast-temp{direction:ltr;font-weight:900;font-size:.95rem;color:var(--gold2);white-space:nowrap}
+.forecast-toggle{width:100%;display:flex;justify-content:center;align-items:center;gap:8px;background:rgba(0,0,0,.3);color:var(--gold2);border:1px solid var(--gold);border-radius:12px;padding:10px;font:inherit;font-weight:900;font-size:1rem;cursor:pointer}
+.forecast-toggle .arr{font-size:.8rem;transition:transform .3s}
+.forecast-toggle[aria-expanded="true"] .arr{transform:rotate(180deg)}
+.forecast-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.forecast-wrap.open{grid-template-rows:1fr}
+.forecast-wrap>.forecast-list{overflow:hidden;min-height:0}
+.forecast-wrap.open>.forecast-list{padding-top:8px}
 .footer-note{text-align:center;font-size:.75rem;color:var(--muted);margin-top:12px;border-top:1px solid var(--line);padding-top:8px;line-height:1.7}
 @media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr)}.main-info{flex-direction:column;align-items:flex-start;gap:10px}}
 </style>
@@ -70,9 +77,11 @@ body{margin:0;padding:12px;font-family:Tahoma,Arial,sans-serif;background:var(--
   <div class="stat-item"><div class="ico">🧭</div><div class="lbl">الضغط</div><div class="val" id="pressureVal">-- hPa</div></div>
   <div class="stat-item"><div class="ico">☀️</div><div class="lbl">مؤشر UV</div><div class="val" id="uvVal">--</div></div>
  </div>
- <div class="forecast-title">📅 توقعات الـ 5 أيام القادمة</div>
+ <button class="forecast-toggle" id="fcBtn" aria-expanded="false" aria-controls="forecastList"><span>📅 شاهد توقعات الأيام المقبلة</span><span class="arr">▼</span></button>
+ <div class="forecast-wrap" id="fcWrap">
  <div class="forecast-list" id="forecastList">
   <div style="text-align:center;color:var(--muted);padding:10px;">جارٍ جلب التوقعات...</div>
+ </div>
  </div>
  <div class="footer-note">تتحدث البيانات تلقائياً كل 10 دقائق<br><span id="srcNote">المصدر: MET Norway</span></div>
 </div>
@@ -294,6 +303,12 @@ async function fetchWeather(){
 }
 
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)fetchWeather();});
+
+/* زر توقعات الأيام المقبلة (انسدال) */
+$("fcBtn").addEventListener("click",()=>{
+ const o=$("fcWrap").classList.toggle("open");
+ $("fcBtn").setAttribute("aria-expanded",o);
+});
 
 /* تسجيل الـ Service Worker */
 if("serviceWorker"in navigator){
