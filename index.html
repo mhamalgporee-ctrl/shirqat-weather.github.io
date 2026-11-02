@@ -61,6 +61,16 @@ h1{margin:0;font-size:clamp(1rem,3.4vw,1.6rem);font-weight:900;color:#ffe08a;lin
 .stat .t{font-size:.78rem;font-weight:800}
 .stat .v{font-size:.9rem;font-weight:900;overflow-wrap:anywhere}
 .fc h2{margin:0 0 4px;padding-bottom:3px;border-bottom:1px solid var(--line);font-size:1.15rem;font-weight:900}
+
+/* زر التوقعات القابل للطي */
+.fc-btn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--gold);border-radius:12px;background:rgba(245,176,46,.12);font-size:1.1rem;font-weight:900;color:var(--gold2);-webkit-tap-highlight-color:transparent}
+.fc-btn:active{background:rgba(245,176,46,.25)}
+.fc-btn .arrow{font-size:.85rem;transition:transform .3s ease}
+.fc-btn.open .arrow{transform:rotate(180deg)}
+.fc-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.fc-wrap.open{grid-template-rows:1fr;margin-top:6px}
+.fc-inner{overflow:hidden;min-height:0}
+
 #fcList{display:flex;flex-direction:column;gap:3px}
 .row{display:flex;align-items:center;gap:8px;padding:3px 10px;min-height:42px;border-radius:12px;border:1px solid #ffffff30;box-shadow:0 2px 8px #0004;text-shadow:0 1px 3px #000c}
 .row .ic{font-size:1.25rem;width:32px;text-align:center}
@@ -88,7 +98,7 @@ h1{margin:0;font-size:clamp(1rem,3.4vw,1.6rem);font-weight:900;color:#ffe08a;lin
 .dc-ap{font-size:.78rem;color:#eaf3ff;margin-top:2px}
 @media(max-width:850px){.grid{grid-template-columns:1fr}.current{order:1}.fc{order:2}}
 @media(max-width:600px){body{padding:6px 10px 8px}header{flex-wrap:nowrap;gap:8px}.title{gap:8px}.ctrl{gap:6px;flex-shrink:0}.digital-clock{min-width:84px;padding:4px 7px}#dcHM{font-size:1.3rem}.dc-ap{margin-top:0}}
-@media(prefers-reduced-motion:reduce){.dot,.hero,.sun:before{animation:none}.refresh{transition:none}}
+@media(prefers-reduced-motion:reduce){.dot,.hero,.sun:before{animation:none}.refresh{transition:none}.fc-wrap,.fc-btn .arrow{transition:none}}
 </style>
 </head>
 <body>
@@ -104,7 +114,12 @@ h1{margin:0;font-size:clamp(1rem,3.4vw,1.6rem);font-weight:900;color:#ffe08a;lin
  </div>
 </header>
 <div class="grid">
- <aside class="fc"><h2>📅 توقعات الـ 5 أيام القادمة</h2><div id="fcList"><div class="note">جارٍ تحميل التوقعات...</div></div><div class="note">🕒 تتحدث البيانات تلقائياً كل 10 دقائق</div><div class="note" id="src"></div></aside>
+ <aside class="fc">
+  <button class="fc-btn" id="fcToggle" type="button" aria-expanded="false" aria-controls="fcWrap"><span>📅 توقعات الـ 5 أيام القادمة</span><span class="arrow">▼</span></button>
+  <div class="fc-wrap" id="fcWrap"><div class="fc-inner">
+   <div id="fcList"><div class="note">جارٍ تحميل التوقعات...</div></div><div class="note">🕒 تتحدث البيانات تلقائياً كل 10 دقائق</div><div class="note" id="src"></div>
+  </div></div>
+ </aside>
  <section class="current" aria-live="polite">
   <div>
    <span class="live"><span class="dot" id="liveDot"></span><span id="liveTxt">جارٍ التحميل…</span></span>
@@ -149,6 +164,13 @@ const cl01=v=>Math.max(0,Math.min(1,v));
 const mix=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
 const rgb=(c,a=1)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
 const num=v=>(v===null||v===undefined||v==="")?NaN:Number(v);
+
+/* ---------- زر طي/فتح التوقعات ---------- */
+$("fcToggle").addEventListener("click",()=>{
+ const open=$("fcWrap").classList.toggle("open");
+ $("fcToggle").classList.toggle("open",open);
+ $("fcToggle").setAttribute("aria-expanded",open);
+});
 
 const clockFmt=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
 const dateFmt=new Intl.DateTimeFormat("ar-IQ",{timeZone:TZ,weekday:"long",day:"numeric",month:"long",year:"numeric"});
