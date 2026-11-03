@@ -78,11 +78,8 @@ body{
  border-inline-start:4px solid #67c7ff;
  background:#12486dcc
 }
-.alert.warning{border-color:#ffd166;background:#70520dcc}
-.alert.severe{border-color:#ff625c;background:#96140fdd}
+.alert.warning,.alert.severe,.alert.info{border-color:#67c7ff;background:#12486dcc}
 .dustbox{border:1px solid #8bc8e8;background:#12394dcc}
-.dustbox.watch{border-color:#ffd166;background:#665018dd}
-.dustbox.high{border-color:#ff795e;background:#781d18dd}
 .dustbox b{display:block;color:#ffe08a;font-size:.95rem}
 .dustbox small{display:block;color:#eaf3ff;font-size:.73rem;margin-top:4px}
 .stats-grid{
@@ -205,7 +202,6 @@ button{color:inherit}
  <div class="footer-note">
   تتحدث البيانات تلقائياً كل 10 دقائق<br>
   المصدر: MET Norway للتوقعات الجوية<br>
-  الغبار: CAMS Global عبر Open-Meteo عند توفر البيانات<br>
   البيانات نموذجية وليست قياسات محطة أرضية أو إنذاراً رسمياً
  </div>
 </div>
@@ -345,7 +341,6 @@ function buildDaily(ts,now){
   const hour=new Date(t+OFF*1000).getUTCHours();
   if(hour>=7&&hour<=17)o.cloud.push(effOf(d));
 
-  /* تُضاف كمية كل فترة مرة واحدة إلى يوم بداية الفترة */
   o.pr+=getPeriod(e).mm;
 
   const k=kindOf(symOf(e));
@@ -433,26 +428,23 @@ function buildAlert(ts,ci,now){
 
  if(heavy){
   parts.push(
-   "⚠️ توجد إشارة إلى هطولات قد تكون غزيرة؛ " +
+   "🌧️ توجد إشارة إلى هطولات قد تكون غزيرة؛ " +
    "مجموع الكميات المتوقعة في الفترة المفحوصة نحو "+
    totalRain.toFixed(1)+" ملم"
   );
  }
 
  if(peakGust>=65){
-  parts.push("💨 هبات رياح قوية جداً قد تصل إلى "+
+  parts.push("💨 هبات رياح نشطة قد تصل إلى "+
    Math.round(peakGust)+" كم/س");
  }else if(peakGust>=45){
-  parts.push("💨 هبات رياح نشطة قد تصل إلى "+
+  parts.push("💨 رياح نشطة نسبياً قد تصل إلى "+
    Math.round(peakGust)+" كم/س");
  }
 
  if(!parts.length)return null;
 
- const level=(heavy||peakGust>=65)?"severe":
-  (thunder||peakGust>=45)?"warning":"info";
-
- return{message:parts.join(" · "),level};
+ return{message:parts.join(" · "),level:"info"};
 }
 
 function buildDust(data,now){
@@ -470,35 +462,17 @@ function buildDust(data,now){
 
  const future=rows.filter(x=>x.time>=now-60*60e3);
  const peak=future.reduce((a,b)=>b.dust>a.dust?b:a,future[0]);
- const elevated=future.filter(x=>x.dust>=100);
- const severe=future.filter(x=>x.dust>=200);
+ const severe=future.filter(x=>x.dust>=350);
 
- let state="لا توجد إشارة مرتفعة للغبار";
- let level="";
- let detail="حسب توقعات CAMS المتاحة، لا تظهر إشارة مرتفعة للغبار السطحي.";
-
- if(severe.length){
-  state="إشارة غبار مرتفعة";
-  level="high";
-  detail="يتوقع النموذج ارتفاع الغبار السطحي إلى "+
-   Math.round(peak.dust)+" ميكروغرام/م³ تقريباً عند "+
-   timeLabel(peak.time)+".";
- }else if(elevated.length){
-  state="احتمال ارتفاع الغبار";
-  level="watch";
-  detail="يتوقع النموذج ارتفاعاً محتملاً للغبار السطحي إلى "+
-   Math.round(peak.dust)+" ميكروغرام/م³ تقريباً عند "+
-   timeLabel(peak.time)+".";
- }
-
- const first=elevated[0];
- if(first&&first.time>now+45*60e3){
-  detail+=" بداية الإشارة المتوقعة تقريباً "+
-   timeLabel(first.time)+".";
- }
+ /* عدم إظهار تنبيه الغبار إلا إذا كانت قيمة الغبار عالية جداً وتدل على عاصفة قوية */
+ if(!severe.length)return null;
 
  return{
-  state,level,detail,
+  state:"تنبيه عاصفة غبارية قوية",
+  level:"",
+  detail:"يتوقع النموذج تأثر المنطقة بعاصفة غبارية وارتفاع الغبار السطحي إلى "+
+   Math.round(peak.dust)+" ميكروغرام/م³ تقريباً عند "+
+   timeLabel(peak.time)+".",
   current:rows[0].dust,
   peak:peak.dust,
   peakTime:peak.time
@@ -507,24 +481,18 @@ function buildDust(data,now){
 
 function renderDust(d){
  const el=$("dustBox");
- el.hidden=false;
 
  if(!d){
-  el.className="dustbox";
-  el.innerHTML=
-   "<b>🌫️ متابعة الغبار</b>"+
-   "تعذر جلب بيانات الغبار حالياً؛ لا يمكن تأكيد وجود الغبار أو نفيه."+
-   "<small>المصدر: CAMS Global عبر Open-Meteo</small>";
+  el.hidden=true;
   return;
  }
 
- el.className="dustbox "+d.level;
+ el.hidden=false;
+ el.className="dustbox";
  el.innerHTML=
   `<b>🌫️ ${d.state}</b>${d.detail}`+
   `<small>أعلى قيمة غبار متوقعة: ${Math.round(d.peak)} ميكروغرام/م³`+
-  ` · الوقت: ${timeLabel(d.peakTime)}</small>`+
-  `<small>هذه توقعات نموذجية وليست قياس محطة أرضية أو إنذاراً رسمياً. `+
-  `دقة شبكة CAMS العالمية محدودة مكانياً، وقد لا ترصد الغبار المحلي بدقة.</small>`;
+  ` · الوقت: ${timeLabel(d.peakTime)}</small>`;
 }
 
 function getJSON(url){
@@ -606,7 +574,6 @@ async function fetchWeather(){
 
   const eff=effOf(d);
 
-  /* تقدير الحرارة المحسوسة */
   let feels=temp;
   if(finite(humidity)&&finite(wind)){
    const vapor=(humidity/100)*6.105*
@@ -614,7 +581,6 @@ async function fetchWeather(){
    feels=Math.round(rawT+.33*vapor-.7*wind-4);
   }
 
-  /* UV: القيمة المفقودة تبقى غير متاحة ولا تُحوّل إلى صفر */
   const uvClear=num(d.ultraviolet_index_clear_sky);
   const uv=finite(uvClear)?
    Math.max(0,uvClear*(1-.75*Math.pow(eff/100,3.4))):NaN;
@@ -649,7 +615,7 @@ async function fetchWeather(){
   al.hidden=!alert;
   if(alert){
    al.textContent=alert.message;
-   al.className="alert "+alert.level;
+   al.className="alert info";
   }
 
   const daily=buildDaily(ts,now);
