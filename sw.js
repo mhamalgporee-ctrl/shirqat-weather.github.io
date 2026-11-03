@@ -1,53 +1,125 @@
-const CACHE = 'sharqat-v3';
+"use strict";
+
+const CACHE = "sharqat-v4";
+
 const FILES = [
-  './',
-  './index.html',
-  './weather.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  "./",
+  "./index.html",
+  "./weather.html",
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
-/* تثبيت: حفظ الملفات واحداً واحداً حتى لا يفشل التثبيت إذا نقص ملف */
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then((c) =>
-      Promise.all(FILES.map((f) => c.add(new Request(f, { cache: 'reload' })).catch(() => null)))
-    )
+const STATIC_PATHS = new Set(
+  FILES.map(file => new URL(file, self.registration.scope).pathname)
+);
+
+/* تثبيت النسخة الجديدة */
+self.addEventListener("install", event => {
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE);
+
+      await Promise.all(
+        FILES.map(async file => {
+          try {
+            const request = new Request(file, {
+              cache: "reload"
+            });
+
+            const response = await fetch(request);
+
+            if (response.ok) {
+              await cache.put(request, response);
+            }
+          } catch (error) {
+            console.warn("تعذر تخزين الملف:", file, error);
+          }
+        })
+      );
+
+      await self.skipWaiting();
+    })()
   );
-  self.skipWaiting();
 });
 
-/* تفعيل: حذف الكاش القديم */
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+/* تفعيل النسخة الجديدة وحذف النسخ القديمة */
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+
+      await Promise.all(
+        keys
+          .filter(key => key.startsWith("sharqat-") && key !== CACHE)
+          .map(key => caches.delete(key))
+      );
+
+      await self.clients.claim();
+    })()
   );
 });
 
-self.addEventListener('fetch', (e) => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
+/* التعامل مع الطلبات */
+self.addEventListener("fetch", event => {
+  const request = event.request;
 
-  const url = new URL(req.url);
-  if (!/^https?:$/.test(url.protocol)) return;
+  if (request.method !== "GET") return;
 
-  /* الإنترنت أولاً لكل الطلبات، والكاش فقط عند انقطاع الاتصال */
-  e.respondWith(
-    fetch(req, { cache: 'no-store' })
-      .then((res) => {
-        if (res && (res.ok || res.type === 'opaque')) {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
+  const url = new URL(request.url);
+
+  /* لا نخزن خدمات الطقس والغبار الخارجية */
+  if (url.origin !== self.location.origin) return;
+
+  /* لا نتدخل في الملفات غير المحددة */
+  if (!STATIC_PATHS.has(url.pathname) && request.mode !== "navigate") {
+    return;
+  }
+
+  event.respondWith(
+    (async () => {
+      try {
+        /* الإنترنت أولاً */
+        const response = await fetch(request);
+
+        if (response && response.ok) {
+          const cache = await caches.open(CACHE);
+
+          const key = request.mode === "navigate"
+            ? "./index.html"
+            : request;
+
+          await cache.put(key, response.clone());
         }
-        return res;
-      })
-      .catch(() =>
-        caches.match(req, { ignoreSearch: true }).then((cached) =>
-          cached || (req.mode === 'navigate' ? caches.match('./index.html') : undefined)
-        )
-      )
+
+        return response;
+
+      } catch (error) {
+        /* عند انقطاع الإنترنت نستخدم النسخة المحفوظة */
+        const cache = await caches.open(CACHE);
+
+        const cached = await cache.match(request);
+
+        if (cached) return cached;
+
+        /* الصفحة الرئيسية كحل احتياطي */
+        if (request.mode === "navigate") {
+          const home = await cache.match("./index.html");
+
+          if (home) return home;
+        }
+
+        return new Response(
+          "لا يوجد اتصال بالإنترنت. يرجى المحاولة مرة أخرى.",
+          {
+            status: 503,
+            headers: {
+              "Content-Type": "text/plain; charset=utf-8"
+            }
+          }
+        );
+      }
+    })()
   );
 });
