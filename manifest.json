@@ -1,8 +1,8 @@
 {
   "name": "الشرقاط الثقافي الأول وطقس الشرقاط",
-  "short_name": "الشرقاط الثقافي",
-  "description": "تطبيق رسمي لعرض حالة الطقس المباشرة والتوقعات في قضاء الشرقاط",
-  "id": "./index.html",
+  "short_name": "طقس الشرقاط",
+  "description": "حالة الطقس والتوقعات الجوية والتنبيهات ومتابعة الغبار في قضاء الشرقاط",
+  "id": "./",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -11,25 +11,22 @@
   "dir": "rtl",
   "background_color": "#121824",
   "theme_color": "#0d2137",
-  "categories": ["weather", "news"],
+  "categories": [
+    "weather",
+    "news"
+  ],
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }
