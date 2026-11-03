@@ -69,11 +69,10 @@ body{
  direction:ltr;color:var(--gold2);white-space:nowrap
 }
 .weather-ico{font-size:3rem}
-.condition{font-size:1.2rem;font-weight:900;color:var(--gold2)}
-.feels-like{font-size:.9rem;color:var(--muted);margin-bottom:12px}
+.condition{font-size:1.2rem;font-weight:900;color:var(--gold2);margin-bottom:8px}
 .alert,.dustbox{
  margin:8px 0;padding:10px 12px;
- border-radius:9px;font-size:.87rem;
+ border-radius:9px;font-size:.95rem;
  line-height:1.8;font-weight:700;
  border-inline-start:4px solid #67c7ff;
  background:#12486dcc
@@ -82,10 +81,19 @@ body{
 .dustbox{border:1px solid #8bc8e8;background:#12394dcc}
 .dustbox b{display:block;color:#ffe08a;font-size:.95rem}
 .dustbox small{display:block;color:#eaf3ff;font-size:.73rem;margin-top:4px}
+.stats-header{
+ display:grid;grid-template-columns:repeat(4,1fr);
+ gap:8px;margin-top:8px;padding:0 4px 2px
+}
+.feels-like{
+ grid-column:1;text-align:center;
+ font-size:.82rem;font-weight:800;color:var(--muted);
+ white-space:nowrap
+}
 .stats-grid{
  display:grid;grid-template-columns:repeat(4,1fr);
  gap:8px;border-top:1px solid var(--line);
- padding-top:12px;margin-bottom:16px
+ padding-top:8px;margin-bottom:16px
 }
 .stat-item{
  background:#0003;padding:8px;border-radius:10px;
@@ -127,7 +135,8 @@ body{
 }
 button{color:inherit}
 @media(max-width:600px){
- .stats-grid{grid-template-columns:repeat(2,1fr)}
+ .stats-grid,.stats-header{grid-template-columns:repeat(4,1fr)}
+ .feels-like{font-size:.75rem}
  .main-info{flex-direction:column;align-items:flex-start}
  .temp-val{font-size:2.7rem}
 }
@@ -157,10 +166,13 @@ button{color:inherit}
  </div>
 
  <div class="condition" id="conditionText">جارٍ تحميل حالة الطقس...</div>
- <div class="feels-like" id="feelsLike">الحرارة المحسوسة: --°C</div>
 
  <div class="alert" id="alertBox" role="alert" hidden></div>
  <div class="dustbox" id="dustBox" role="status" hidden></div>
+
+ <div class="stats-header">
+  <div class="feels-like" id="feelsLike">الحرارة المحسوسة: --°C</div>
+ </div>
 
  <div class="stats-grid">
   <div class="stat-item">
@@ -464,7 +476,6 @@ function buildDust(data,now){
  const peak=future.reduce((a,b)=>b.dust>a.dust?b:a,future[0]);
  const severe=future.filter(x=>x.dust>=350);
 
- /* عدم إظهار تنبيه الغبار إلا إذا كانت قيمة الغبار عالية جداً وتدل على عاصفة قوية */
  if(!severe.length)return null;
 
  return{
