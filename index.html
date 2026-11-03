@@ -38,13 +38,13 @@ h1{margin:0;font-size:clamp(.9rem,3vw,1.25rem);font-weight:900;color:#ffe08a;lin
 .live{display:inline-flex;gap:8px;align-items:center;font-size:.85rem;font-weight:700}
 .dot{width:12px;height:12px;border-radius:50%;background:#22e05a;box-shadow:0 0 10px #22e05a;animation:pulse 1.4s infinite;flex-shrink:0}
 @keyframes pulse{50%{opacity:.35;transform:scale(.8)}}
-.alert{margin:6px 0 0;padding:8px 11px;border-inline-start:4px solid #ffb347;background:#74400dcc;border-radius:8px;font-weight:700;font-size:.85rem;line-height:1.65}
-.alert.warning{border-color:#ffd166;background:#70520dcc}
-.alert.severe{border-color:#ff625c;background:#96140fdd}
+.alert{margin:6px 0 0;padding:8px 11px;border-inline-start:4px solid #67c7ff;background:#12486dcc;border-radius:8px;font-weight:700;font-size:.85rem;line-height:1.65}
+.alert.warning{border-color:#67c7ff;background:#12486dcc}
+.alert.severe{border-color:#67c7ff;background:#12486dcc}
 .alert.info{border-color:#67c7ff;background:#12486dcc}
 .dustbox{margin:6px 0;padding:8px 11px;border:1px solid #8bc8e8;border-inline-start:4px solid #8bc8e8;border-radius:8px;background:#12394dcc;font-size:.82rem;line-height:1.7}
-.dustbox.watch{border-color:#ffd166;background:#665018dd}
-.dustbox.high{border-color:#ff795e;background:#781d18dd}
+.dustbox.watch{border-color:#8bc8e8;background:#12394dcc}
+.dustbox.high{border-color:#8bc8e8;background:#12394dcc}
 .dustbox b{display:block;font-size:.9rem;color:#ffe08a}
 .dustbox small{display:block;color:#eaf3ff;font-size:.72rem}
 .cur-main{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0}
@@ -162,7 +162,6 @@ const OFF=3*3600,DAYS=["الأحد","الإثنين","الثلاثاء","الأ�
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const URL_MET=`https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${LAT}&lon=${LON}`;
 const URL_WTTR=`https://wttr.in/${LAT},${LON}?format=j1`;
-/* CAMS Global عبر Open-Meteo: غبار سطحي وAOD وPM10، بدقة مكانية تقارب 45 كم */
 const URL_DUST=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&current=dust,aerosol_optical_depth,pm10&hourly=dust,aerosol_optical_depth,pm10&domains=cams_global&forecast_days=5&timezone=${encodeURIComponent(TZ)}`;
 let S=null,mode="sunny",curKey="",thunderSoon=false,loading=false,raf=0,onScreen=true,retryT=0,lastMin="";
 const cl01=v=>Math.max(0,Math.min(1,v));
@@ -198,7 +197,6 @@ const THUNDER_RE=/thunder/,SNOW_RE=/snow/,RAIN_RE=/rain|sleet|drizzle/,FOG_RE=/f
 function kindOf(sym){sym=String(sym||"");if(THUNDER_RE.test(sym))return"thunder";if(SNOW_RE.test(sym))return"snow";if(RAIN_RE.test(sym))return"rain";if(FOG_RE.test(sym))return"fog";return"none";}
 const symOf=e=>e.data.next_1_hours?.summary?.symbol_code??e.data.next_6_hours?.summary?.symbol_code??e.data.next_12_hours?.summary?.symbol_code??"";
 
-/* كمية الهطول للفترة التي يذكرها المصدر، وليست قراءة لحظية */
 function precipPeriod(e){
  const one=e.data.next_1_hours?.details?.precipitation_amount;
  if(one!==undefined&&one!==null)return{mm:Math.max(0,num(one)||0),hours:1};
@@ -241,7 +239,6 @@ function buildDaily(ts,now){
   if(n6&&!e.data.next_1_hours){const mx=num(n6.air_temperature_max),mn=num(n6.air_temperature_min);if(Number.isFinite(mx))o.hi=Math.max(o.hi,mx);if(Number.isFinite(mn))o.lo=Math.min(o.lo,mn);}
   const ws=num(d.wind_speed)*3.6;if(Number.isFinite(ws))o.wind=Math.max(o.wind,ws);
   const h=new Date(t+OFF*1000).getUTCHours();if(h>=7&&h<=17)o.cl.push(effOf(d));
-  /* كل سجل يضيف كمية الفترة التي تبدأ عند توقيته مرة واحدة */
   o.pr+=precipPeriod(e).mm;
   const k=kindOf(symOf(e));if(k==="thunder")o.thunder=true;if(k==="snow")o.snow=true;
  }
@@ -287,13 +284,12 @@ function buildAlert(ts,ci,now){
   parts.push("🌧️ يُتوقع هطول أمطار في الشرقاط ابتداءً من "+timeLabel(firstRain.start));
  }
  if(heavy){
-  parts.push("⚠️ قد تكون بعض الهطولات غزيرة؛ الكمية المتوقعة ضمن الفترة القريبة نحو "+totalRain.toFixed(1)+" ملم");
+  parts.push("🌧️ قد تكون بعض الهطولات غزيرة؛ الكمية المتوقعة ضمن الفترة القريبة نحو "+totalRain.toFixed(1)+" ملم");
  }
- if(peakGust>=65)parts.push("💨 رياح قوية جداً، هبات متوقعة تصل إلى "+Math.round(peakGust)+" كم/س");
- else if(peakGust>=45)parts.push("💨 رياح نشطة إلى قوية، هبات تصل إلى "+Math.round(peakGust)+" كم/س");
+ if(peakGust>=65)parts.push("💨 هبات رياح نشطة تصل إلى "+Math.round(peakGust)+" كم/س");
+ else if(peakGust>=45)parts.push("💨 رياح نشطة نسبياً تصل سرعتها إلى "+Math.round(peakGust)+" كم/س");
  if(!parts.length)return"";
- const level=(heavy||peakGust>=65)?"severe":(firstThunder||peakGust>=45)?"warning":"info";
- return{message:parts.join(" · "),level};
+ return{message:parts.join(" · "),level:"info"};
 }
 function buildDust(data,now){
  const h=data?.hourly;if(!h||!Array.isArray(h.time)||!Array.isArray(h.dust))throw Error("CAMS dust data missing");
@@ -301,20 +297,19 @@ function buildDust(data,now){
  if(!rows.length)throw Error("No CAMS dust values");
  const future=rows.filter(x=>x.time>=now-90*60e3),peak=future.reduce((a,b)=>b.dust>a.dust?b:a,future[0]);
  if(!future.length)throw Error("No future CAMS dust values");
- const current=future[0],elevated=future.filter(x=>x.dust>=100),severe=future.filter(x=>x.dust>=200);
- let state="هادئ حسب النموذج",level="",detail="لا تظهر إشارة مرتفعة للغبار السطحي في توقعات CAMS للشرقاط خلال الفترة المتاحة.";
- if(severe.length){state="إشارة غبار مرتفعة";level="high";detail=`يتوقع النموذج ارتفاع الغبار السطحي إلى ${Math.round(peak.dust)} ميكروغرام/م³ تقريباً عند ${timeLabel(peak.time)}.`;}
- else if(elevated.length){state="احتمال ارتفاع الغبار";level="watch";detail=`يتوقع النموذج ارتفاعاً محتملاً للغبار السطحي، وأعلى قيمة متوقعة ${Math.round(peak.dust)} ميكروغرام/م³ عند ${timeLabel(peak.time)}.`;}
- const first=elevated[0];
- if(first&&first.time>now+45*60e3)detail+=` بداية الإشارة المتوقعة تقريباً ${timeLabel(first.time)}.`;
- else if(first)detail+=" الإشارة موجودة ضمن أقرب فترة توقع.";
- return{state,level,detail,current:current?.dust,peak:peak.dust,peakTime:peak.time,updated:data.current?.time||"غير متوفر",aod:peak.aod,pm10:peak.pm10};
+ const current=future[0],severe=future.filter(x=>x.dust>=350);
+ 
+ // عدم إظهار تنبيه الغبار إلا إذا كانت قيمة الغبار عالية جداً وتدل على عاصفة قوية، وإلا يبقى الطقس مستقراً وصحواً بلا إزعاج
+ if(!severe.length)return null;
+
+ let state="تنبيه عاصفة غبارية قوية",detail=`يتوقع النموذج تأثر المنطقة بعاصفة غبارية وارتفاع الغبار السطحي إلى ${Math.round(peak.dust)} ميكروغرام/م³ تقريباً عند ${timeLabel(peak.time)}.`;
+ return{state,level:"",detail,current:current?.dust,peak:peak.dust,peakTime:peak.time,updated:data.current?.time||"غير متوفر",aod:peak.aod,pm10:peak.pm10};
 }
 function renderDust(dust){
  const el=$("dustBox");
- if(!dust){el.hidden=false;el.className="dustbox";el.innerHTML='<b>🌫️ متابعة الغبار</b>تعذر جلب بيانات الغبار من CAMS حالياً؛ لا يمكن تأكيد وجود غبار أو نفيه.<small>المصدر: CAMS Global عبر Open-Meteo</small>';return;}
- el.hidden=false;el.className="dustbox "+(dust.level||"");
- el.innerHTML=`<b>🌫️ ${dust.state}</b>${dust.detail}<small>غبار سطحي الآن/أقرب فترة: ${Number.isFinite(dust.current)?Math.round(dust.current)+" ميكروغرام/م³":"غير متاح"} · وقت القراءة: ${dust.updated||"غير متوفر"} · المصدر: CAMS Global عبر Open-Meteo</small><small>هذه قيمة توقع نموذجية وليست قياس محطة أرضية أو إنذاراً رسمياً؛ دقة الشبكة العالمية نحو 45 كم.</small>`;
+ if(!dust){el.hidden=true;return;}
+ el.hidden=false;el.className="dustbox";
+ el.innerHTML=`<b>🌫️ ${dust.state}</b>${dust.detail}<small>غبار سطحي الآن/أقرب فترة: ${Number.isFinite(dust.current)?Math.round(dust.current)+" ميكروغرام/م³":"غير متاح"} · وقت القراءة: ${dust.updated||"غير متوفر"} · المصدر: CAMS Global عبر Open-Meteo</small>`;
 }
 function getJSON(url){
  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),15000);
@@ -334,7 +329,6 @@ async function load(){
   let wc=null;if(rw.status==="fulfilled")wc=rw.value?.current_condition?.[0]||null;
   const metT=num(d.air_temperature),metH=num(d.relative_humidity);
   if(!Number.isFinite(metT))throw Error("بيانات الحرارة غير متوفرة");
-  /* لا نخلط قيماً من خدمتين مختلفتين زمنياً؛ MET هو المصدر المعتمد للقراءات */
   const t=metT,h=Number.isFinite(metH)?metH:(wc&&Number.isFinite(num(wc.humidity))?num(wc.humidity):50);
   const ws=num(d.wind_speed)||0,eff=effOf(d),sym=symOf(cur),kind=kindOf(sym),pr=precipPeriod(cur).mm;
   const e=(h/100)*6.105*Math.exp(17.27*t/(237.7+t)),feels=t+.33*e-.7*ws-4;
@@ -355,7 +349,6 @@ async function load(){
   else{S={off:1,t:0,f:0,w:0,h:0,p:0,uv:0,eff:0,precip:0,kind:"none",daily:[],alert:"",src:"",stale:false};scheduleRetry(30000);}
  }finally{loading=false;render();}
 }
-/* لا نستنتج وجود عاصفة غبارية من الرياح والرطوبة فقط */
 function liveFx(){return currentWx()[2];}
 function render(){
  $("cityName").textContent=CITY;$("date").textContent=dateFmt.format(new Date());
@@ -365,7 +358,7 @@ function render(){
   $("wi").textContent=$("hu").textContent=$("pr").textContent=$("uv").textContent="--";
   $("fcList").textContent="لا توجد توقعات متاحة حالياً.";
   $("liveTxt").textContent="تعذر الاتصال بخدمة الطقس، ستتم إعادة المحاولة";
-  $("liveDot").style.background="#999";$("desc").textContent="الطقس غير متاح الآن";$("hero").textContent="🌙";$("src").textContent="";al.hidden=true;renderDust(null);
+  $("liveDot").style.background="#999";$("desc").textContent="الطقس غير متاحة الآن";$("hero").textContent="🌙";$("src").textContent="";al.hidden=true;renderDust(null);
  }else{
   $("temp").textContent=S.t+"°C";$("feels").textContent="الحرارة المحسوسة: "+S.f+"°C";
   $("wi").textContent=S.w+" كم/س";$("hu").textContent=S.h+"%";$("pr").textContent=S.p+" hPa";
@@ -374,7 +367,7 @@ function render(){
   $("liveTxt").textContent=S.stale?"تعذر التحديث · آخر بيانات متاحة":"آخر تحديث لبيانات التوقعات";
   $("liveDot").style.background=S.stale?"#f5b02e":"#22e05a";$("liveDot").style.boxShadow=S.stale?"none":"0 0 10px #22e05a";
   $("src").textContent="📡 المصدر: "+S.src+" · توقعات نموذج جوي لمركز القضاء";
-  al.textContent=S.alert?.message||"";al.className="alert "+(S.alert?.level||"");al.hidden=!S.alert;
+  al.textContent=S.alert?.message||"";al.className="alert info";al.hidden=!S.alert;
   renderDust(S.dust);
  }
  setFx(liveFx());if(reduce)draw(performance.now());
@@ -418,7 +411,6 @@ function draw(t){
  let cc=mix([70,80,120],[255,255,255],cl01((a+.3)/.8)),tw=cl01(1-Math.abs(a-.05)/.25);cc=mix(cc,[255,185,150],tw*.6);if(gray)cc=mix(cc,[110,120,138],gray);
  CL.forEach(c=>{if(!reduce){c.x+=c.v;if(c.x>W+260)c.x=-260;}c.pf.forEach(q=>{const x=c.x+q.dx,y=c.y+q.dy,g=cx.createRadialGradient(x,y,0,x,y,q.r);g.addColorStop(0,rgb(cc,.5+.35*cov));g.addColorStop(.55,rgb(cc,.3+.2*cov));g.addColorStop(1,rgb(cc,0));cx.fillStyle=g;cx.beginPath();cx.arc(x,y,q.r,0,Math.PI*2);cx.fill();});});
  if(mode==="rain"){cx.strokeStyle="#bedcff80";cx.lineWidth=1.2;cx.beginPath();P.forEach(p=>{cx.moveTo(p.x,p.y);cx.lineTo(p.x-3,p.y+14+p.s*10);if(!reduce){p.y+=9+p.s*9;p.x-=1.2;if(p.y>H){p.y=-20;p.x=Math.random()*W;}}});cx.stroke();
-  /* الوميض فقط إذا كان الرعد متوقعاً خلال الساعة القريبة */
   if(!reduce&&thunderSoon&&Math.random()<.002)flash=1;
   if(flash>0){cx.fillStyle=`rgba(255,255,255,${flash*.35})`;cx.fillRect(0,0,W,H);flash-=.06;}
  }
