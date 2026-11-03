@@ -38,15 +38,15 @@ h1{margin:0;font-size:clamp(.9rem,3vw,1.25rem);font-weight:900;color:#ffe08a;lin
 .live{display:inline-flex;gap:8px;align-items:center;font-size:.85rem;font-weight:700}
 .dot{width:12px;height:12px;border-radius:50%;background:#22e05a;box-shadow:0 0 10px #22e05a;animation:pulse 1.4s infinite;flex-shrink:0}
 @keyframes pulse{50%{opacity:.35;transform:scale(.8)}}
-.alert{margin:6px 0 0;padding:8px 11px;border-inline-start:4px solid #67c7ff;background:#12486dcc;border-radius:8px;font-weight:700;font-size:.85rem;line-height:1.65}
+.alert{margin:4px 0;padding:10px 12px;border-inline-start:4px solid #67c7ff;background:#12486dcc;border-radius:8px;font-weight:700;font-size:.95rem;line-height:1.7}
 .alert.warning{border-color:#67c7ff;background:#12486dcc}
 .alert.severe{border-color:#67c7ff;background:#12486dcc}
 .alert.info{border-color:#67c7ff;background:#12486dcc}
-.dustbox{margin:6px 0;padding:8px 11px;border:1px solid #8bc8e8;border-inline-start:4px solid #8bc8e8;border-radius:8px;background:#12394dcc;font-size:.82rem;line-height:1.7}
+.dustbox{margin:4px 0;padding:10px 12px;border:1px solid #8bc8e8;border-inline-start:4px solid #8bc8e8;border-radius:8px;background:#12394dcc;font-size:.9rem;line-height:1.7}
 .dustbox.watch{border-color:#8bc8e8;background:#12394dcc}
 .dustbox.high{border-color:#8bc8e8;background:#12394dcc}
-.dustbox b{display:block;font-size:.9rem;color:#ffe08a}
-.dustbox small{display:block;color:#eaf3ff;font-size:.72rem}
+.dustbox b{display:block;font-size:.95rem;color:#ffe08a}
+.dustbox small{display:block;color:#eaf3ff;font-size:.73rem}
 .cur-main{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0}
 .city{font-size:clamp(1.3rem,4.2vw,2rem);font-weight:900;margin:0;line-height:1.15}
 .date{font-weight:700;color:#eaf3ff;font-size:.85rem}
@@ -60,8 +60,9 @@ h1{margin:0;font-size:clamp(.9rem,3vw,1.25rem);font-weight:900;color:#ffe08a;lin
 .desc{font-size:clamp(1.2rem,4vw,1.55rem);font-weight:900;color:var(--gold2);text-align:end}
 .descrow{display:flex;align-items:center;justify-content:flex-start;gap:8px}
 .descrow .desc{flex-shrink:0}
-.feels{text-align:end;font-weight:800;margin-top:8px;font-size:.85rem}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:5px;border-top:1px solid var(--line);padding-top:4px}
+.stats-header{display:grid;grid-template-columns:repeat(4,1fr);margin-top:4px;padding:0 2px 2px}
+.feels{grid-column:4;text-align:center;font-size:.82rem;font-weight:800;color:#fff;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);padding-top:4px}
 .stat{text-align:center;padding:2px;border-inline-start:1px solid var(--line);min-width:0}
 .stat:first-child{border-inline-start:0}
 .stat .i{font-size:.95rem;line-height:1.25}
@@ -130,20 +131,28 @@ h1{margin:0;font-size:clamp(.9rem,3vw,1.25rem);font-weight:900;color:#ffe08a;lin
  <section class="current" aria-live="polite">
   <div>
    <span class="live"><span class="dot" id="liveDot"></span><span id="liveTxt">جارٍ التحميل…</span></span>
-   <div class="alert" id="alert" role="alert" hidden></div>
-   <div class="dustbox" id="dustBox" role="status" hidden></div>
    <div class="cur-main">
     <div><h2 class="city" id="cityName">الشرقاط</h2><div class="date" id="date"></div></div>
     <div class="big"><div class="hero" id="hero">🌤️</div><div class="temp" id="temp">--°C</div></div>
    </div>
    <div class="descrow"><div class="desc" id="desc">جارٍ جلب حالة الطقس</div></div>
-   <div class="feels" id="feels"></div>
   </div>
-  <div class="stats">
-   <div class="stat"><div class="i">☀️</div><div class="t">مؤشر UV</div><div class="v" id="uv">--</div></div>
-   <div class="stat"><div class="i">🧭</div><div class="t">الضغط</div><div class="v" id="pr">--</div></div>
-   <div class="stat"><div class="i">💧</div><div class="t">الرطوبة</div><div class="v" id="hu">--</div></div>
-   <div class="stat"><div class="i">🌬️</div><div class="t">الرياح</div><div class="v" id="wi">--</div></div>
+  
+  <div>
+   <div class="alert" id="alert" role="alert" hidden></div>
+   <div class="dustbox" id="dustBox" role="status" hidden></div>
+  </div>
+
+  <div>
+   <div class="stats-header">
+    <div class="feels" id="feels"></div>
+   </div>
+   <div class="stats">
+    <div class="stat"><div class="i">☀️</div><div class="t">مؤشر UV</div><div class="v" id="uv">--</div></div>
+    <div class="stat"><div class="i">🧭</div><div class="t">الضغط</div><div class="v" id="pr">--</div></div>
+    <div class="stat"><div class="i">💧</div><div class="t">الرطوبة</div><div class="v" id="hu">--</div></div>
+    <div class="stat"><div class="i">🌬️</div><div class="t">الرياح</div><div class="v" id="wi">--</div></div>
+   </div>
   </div>
  </section>
 </div>
@@ -299,7 +308,6 @@ function buildDust(data,now){
  if(!future.length)throw Error("No future CAMS dust values");
  const current=future[0],severe=future.filter(x=>x.dust>=350);
  
- // عدم إظهار تنبيه الغبار إلا إذا كانت قيمة الغبار عالية جداً وتدل على عاصفة قوية، وإلا يبقى الطقس مستقراً وصحواً بلا إزعاج
  if(!severe.length)return null;
 
  let state="تنبيه عاصفة غبارية قوية",detail=`يتوقع النموذج تأثر المنطقة بعاصفة غبارية وارتفاع الغبار السطحي إلى ${Math.round(peak.dust)} ميكروغرام/م³ تقريباً عند ${timeLabel(peak.time)}.`;
