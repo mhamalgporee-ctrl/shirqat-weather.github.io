@@ -4,62 +4,150 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d2137">
-<title>طقس الشرقاط المباشر</title>
+<meta name="description" content="طقس الشرقاط: التوقعات الجوية والتنبيهات ومتابعة الغبار">
+<title>طقس الشرقاط - تفاصيل الطقس</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
+
 <style>
-:root{--bg:#121824;--card:#1b2433;--gold:#f5b02e;--gold2:#ffd166;--text:#fff;--muted:#b0c4de;--line:rgba(255,255,255,.12)}
-*,*::before,*::after{box-sizing:border-box}
-body{margin:0;padding:12px;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);direction:rtl}
-.card{max-width:760px;margin:0 auto;background:var(--card);border-radius:18px;border:1px solid var(--line);padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
-.top-bar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}
-.time-box{background:rgba(0,0,0,.3);padding:6px 12px;border-radius:10px;border:1px solid var(--gold);color:var(--gold2);font-weight:900;font-size:1rem;text-align:center;direction:ltr;font-variant-numeric:tabular-nums}
-.live-badge{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:#22e05a;font-weight:700}
-.dot{width:10px;height:10px;background:#22e05a;border-radius:50%;box-shadow:0 0 8px #22e05a;animation:pulse 1.4s infinite}
-@keyframes pulse{50%{opacity:.3}}
-.main-info{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
-.city-name{font-size:1.8rem;font-weight:900;margin:0}
-.date-str{color:var(--muted);font-size:.9rem;margin-top:2px}
-.temp-box{display:flex;align-items:center;gap:12px}
-.temp-val{font-size:3rem;font-weight:900;direction:ltr;color:var(--gold2)}
-.weather-ico{font-size:3rem}
-.condition{font-size:1.2rem;font-weight:800;color:var(--gold2);margin-bottom:4px}
-.feels-like{font-size:.9rem;color:var(--muted);margin-bottom:12px}
-.alert{margin:0 0 12px;padding:8px 10px;border-inline-start:4px solid #ff6b5e;background:#96140fbb;border-radius:8px;font-weight:700;font-size:.9rem;line-height:1.5}
+:root{
+ --bg:#121824;
+ --card:#1b2433;
+ --gold:#f5b02e;
+ --gold2:#ffd166;
+ --text:#fff;
+ --muted:#b0c4de;
+ --line:rgba(255,255,255,.12)
+}
+*{box-sizing:border-box}
 [hidden]{display:none!important}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;border-top:1px solid var(--line);padding-top:12px;margin-bottom:16px}
-.stat-item{background:rgba(0,0,0,.2);padding:8px;border-radius:10px;text-align:center;border:1px solid var(--line)}
+body{
+ margin:0;padding:12px;
+ font-family:Tahoma,Arial,sans-serif;
+ background:var(--bg);color:var(--text);
+ direction:rtl;line-height:1.6
+}
+.card{
+ max-width:760px;margin:0 auto;
+ background:var(--card);
+ border-radius:18px;
+ border:1px solid var(--line);
+ padding:16px;
+ box-shadow:0 8px 24px #0006
+}
+.top-bar{
+ display:flex;justify-content:space-between;
+ align-items:center;gap:8px;
+ border-bottom:1px solid var(--line);
+ padding-bottom:10px;margin-bottom:12px
+}
+.time-box{
+ background:#0005;padding:6px 12px;
+ border-radius:10px;border:1px solid var(--gold);
+ color:var(--gold2);font-weight:900;
+ direction:ltr;font-variant-numeric:tabular-nums
+}
+.live-badge{
+ display:inline-flex;align-items:center;
+ gap:7px;font-size:.82rem;color:#22e05a;font-weight:700
+}
+.dot{
+ width:10px;height:10px;background:#22e05a;
+ border-radius:50%;box-shadow:0 0 8px #22e05a;
+ flex-shrink:0
+}
+.main-info{
+ display:flex;justify-content:space-between;
+ align-items:center;gap:10px;margin:10px 0
+}
+.city-name{font-size:1.8rem;font-weight:900;margin:0}
+.date-str{color:var(--muted);font-size:.9rem}
+.temp-box{display:flex;align-items:center;gap:10px}
+.temp-val{
+ font-size:3rem;font-weight:900;
+ direction:ltr;color:var(--gold2);white-space:nowrap
+}
+.weather-ico{font-size:3rem}
+.condition{font-size:1.2rem;font-weight:900;color:var(--gold2)}
+.feels-like{font-size:.9rem;color:var(--muted);margin-bottom:12px}
+.alert,.dustbox{
+ margin:8px 0;padding:10px 12px;
+ border-radius:9px;font-size:.87rem;
+ line-height:1.8;font-weight:700;
+ border-inline-start:4px solid #67c7ff;
+ background:#12486dcc
+}
+.alert.warning{border-color:#ffd166;background:#70520dcc}
+.alert.severe{border-color:#ff625c;background:#96140fdd}
+.dustbox{border:1px solid #8bc8e8;background:#12394dcc}
+.dustbox.watch{border-color:#ffd166;background:#665018dd}
+.dustbox.high{border-color:#ff795e;background:#781d18dd}
+.dustbox b{display:block;color:#ffe08a;font-size:.95rem}
+.dustbox small{display:block;color:#eaf3ff;font-size:.73rem;margin-top:4px}
+.stats-grid{
+ display:grid;grid-template-columns:repeat(4,1fr);
+ gap:8px;border-top:1px solid var(--line);
+ padding-top:12px;margin-bottom:16px
+}
+.stat-item{
+ background:#0003;padding:8px;border-radius:10px;
+ text-align:center;border:1px solid var(--line);
+ min-width:0
+}
 .stat-item .ico{font-size:1.1rem}
-.stat-item .lbl{font-size:.75rem;color:var(--muted);margin:2px 0}
+.stat-item .lbl{font-size:.75rem;color:var(--muted)}
 .stat-item .val{font-size:.85rem;font-weight:900;overflow-wrap:anywhere}
-
-/* زر التوقعات القابل للطي */
-.forecast-btn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--gold);border-radius:12px;background:rgba(245,176,46,.1);color:var(--gold2);font-family:inherit;font-size:1.05rem;font-weight:900;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.forecast-btn:active{background:rgba(245,176,46,.2)}
-.forecast-btn .arrow{font-size:.9rem;transition:transform .3s ease}
+.forecast-btn{
+ width:100%;display:flex;justify-content:space-between;
+ align-items:center;padding:12px 14px;
+ border:1px solid var(--gold);border-radius:12px;
+ background:#f5b02e1a;color:var(--gold2);
+ font-family:inherit;font-size:1.05rem;
+ font-weight:900;cursor:pointer
+}
+.forecast-btn .arrow{transition:transform .3s}
 .forecast-btn.open .arrow{transform:rotate(180deg)}
-.forecast-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.forecast-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s}
 .forecast-wrap.open{grid-template-rows:1fr;margin-top:8px}
-.forecast-wrap>.forecast-list{overflow:hidden;min-height:0}
-
+.forecast-inner{overflow:hidden;min-height:0}
 .forecast-list{display:flex;flex-direction:column;gap:6px}
-.forecast-row{display:flex;justify-content:space-between;align-items:center;gap:8px;background:rgba(255,255,255,.04);padding:8px 12px;border-radius:10px;border:1px solid var(--line)}
+.forecast-row{
+ display:flex;align-items:center;gap:8px;
+ background:#ffffff0a;padding:9px 12px;
+ border-radius:10px;border:1px solid var(--line)
+}
 .forecast-ico{font-size:1.4rem;width:32px;text-align:center}
 .forecast-info{flex:1;min-width:0}
-.forecast-day{font-weight:800;font-size:.9rem;display:block}
+.forecast-day{font-weight:900;display:block;font-size:.9rem}
 .forecast-desc{color:var(--muted);font-size:.8rem}
-.forecast-temp{direction:ltr;font-weight:900;font-size:.95rem;color:var(--gold2);white-space:nowrap}
-.footer-note{text-align:center;font-size:.75rem;color:var(--muted);margin-top:12px;border-top:1px solid var(--line);padding-top:8px;line-height:1.7}
-@media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr)}.main-info{flex-direction:column;align-items:flex-start;gap:10px}}
+.forecast-temp{direction:ltr;font-weight:900;color:var(--gold2);white-space:nowrap}
+.footer-note{
+ text-align:center;font-size:.75rem;
+ color:var(--muted);margin-top:12px;
+ border-top:1px solid var(--line);
+ padding-top:8px;line-height:1.8
+}
+button{color:inherit}
+@media(max-width:600px){
+ .stats-grid{grid-template-columns:repeat(2,1fr)}
+ .main-info{flex-direction:column;align-items:flex-start}
+ .temp-val{font-size:2.7rem}
+}
 </style>
 </head>
+
 <body>
 <div class="card">
+
  <div class="top-bar">
-  <div class="live-badge"><span class="dot" id="liveDot"></span><span id="liveTxt">جارٍ التحميل…</span></div>
+  <div class="live-badge">
+   <span class="dot" id="liveDot"></span>
+   <span id="liveTxt">جارٍ تحميل التوقعات...</span>
+  </div>
   <div class="time-box" id="clockBox">--:--</div>
  </div>
+
  <div class="main-info">
   <div>
    <h1 class="city-name">الشرقاط</h1>
@@ -70,78 +158,137 @@ body{margin:0;padding:12px;font-family:Tahoma,Arial,sans-serif;background:var(--
    <div class="temp-val" id="tempVal">--°C</div>
   </div>
  </div>
- <div class="condition" id="conditionText">جارٍ التحميل...</div>
+
+ <div class="condition" id="conditionText">جارٍ تحميل حالة الطقس...</div>
  <div class="feels-like" id="feelsLike">الحرارة المحسوسة: --°C</div>
+
  <div class="alert" id="alertBox" role="alert" hidden></div>
+ <div class="dustbox" id="dustBox" role="status" hidden></div>
+
  <div class="stats-grid">
-  <div class="stat-item"><div class="ico">🌬️</div><div class="lbl">الرياح</div><div class="val" id="windVal">-- كم/س</div></div>
-  <div class="stat-item"><div class="ico">💧</div><div class="lbl">الرطوبة</div><div class="val" id="humidityVal">--%</div></div>
-  <div class="stat-item"><div class="ico">🧭</div><div class="lbl">الضغط</div><div class="val" id="pressureVal">-- hPa</div></div>
-  <div class="stat-item"><div class="ico">☀️</div><div class="lbl">مؤشر UV</div><div class="val" id="uvVal">--</div></div>
- </div>
- <button id="forecastToggle" class="forecast-btn" type="button" aria-expanded="false" aria-controls="forecastWrap">
-  <span>📅 توقعات الـ 5 أيام القادمة</span><span class="arrow">▼</span>
- </button>
- <div class="forecast-wrap" id="forecastWrap">
-  <div class="forecast-list" id="forecastList">
-   <div style="text-align:center;color:var(--muted);padding:10px;">جارٍ جلب التوقعات...</div>
+  <div class="stat-item">
+   <div class="ico">🌬️</div>
+   <div class="lbl">الرياح</div>
+   <div class="val" id="windVal">-- كم/س</div>
+  </div>
+  <div class="stat-item">
+   <div class="ico">💧</div>
+   <div class="lbl">الرطوبة</div>
+   <div class="val" id="humidityVal">--%</div>
+  </div>
+  <div class="stat-item">
+   <div class="ico">🧭</div>
+   <div class="lbl">الضغط</div>
+   <div class="val" id="pressureVal">-- hPa</div>
+  </div>
+  <div class="stat-item">
+   <div class="ico">☀️</div>
+   <div class="lbl">مؤشر UV</div>
+   <div class="val" id="uvVal">--</div>
   </div>
  </div>
- <div class="footer-note">تتحدث البيانات تلقائياً كل 10 دقائق<br><span id="srcNote">المصدر: MET Norway</span></div>
+
+ <button id="forecastToggle" class="forecast-btn"
+  type="button" aria-expanded="false" aria-controls="forecastWrap">
+  <span>📅 توقعات الأيام الخمسة القادمة</span>
+  <span class="arrow">▼</span>
+ </button>
+
+ <div class="forecast-wrap" id="forecastWrap">
+  <div class="forecast-inner">
+   <div class="forecast-list" id="forecastList">
+    <div style="text-align:center;padding:10px">جارٍ جلب التوقعات...</div>
+   </div>
+  </div>
+ </div>
+
+ <div class="footer-note">
+  تتحدث البيانات تلقائياً كل 10 دقائق<br>
+  المصدر: MET Norway للتوقعات الجوية<br>
+  الغبار: CAMS Global عبر Open-Meteo عند توفر البيانات<br>
+  البيانات نموذجية وليست قياسات محطة أرضية أو إنذاراً رسمياً
+ </div>
 </div>
 
 <script>
 "use strict";
+
 const $=id=>document.getElementById(id);
 const LAT=35.5036,LON=43.2325,TZ="Asia/Baghdad";
-const OFF=3*3600; /* العراق UTC+3 طوال العام */
+const OFF=3*3600;
 const DAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
-const URL_MET=`https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${LAT}&lon=${LON}`;
+
+const URL_MET=
+ `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${LAT}&lon=${LON}`;
+
+const URL_DUST=
+ `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&current=dust,aerosol_optical_depth,pm10&hourly=dust,aerosol_optical_depth,pm10&domains=cams_global&forecast_days=5&timezone=${encodeURIComponent(TZ)}`;
 
 const num=v=>(v===null||v===undefined||v==="")?NaN:Number(v);
 const finite=Number.isFinite;
 
-/* ---------- زر طي/فتح التوقعات ---------- */
 $("forecastToggle").addEventListener("click",()=>{
  const open=$("forecastWrap").classList.toggle("open");
  $("forecastToggle").classList.toggle("open",open);
  $("forecastToggle").setAttribute("aria-expanded",open);
 });
 
-/* ---------- الساعة والتاريخ ---------- */
-const clockFmt=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hourCycle:"h23"});
-const dateFmt=new Intl.DateTimeFormat("ar-IQ",{timeZone:TZ,weekday:"long",day:"numeric",month:"long",year:"numeric"});
+const clockFmt=new Intl.DateTimeFormat("en-GB",{
+ timeZone:TZ,hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+});
+const dateFmt=new Intl.DateTimeFormat("ar-IQ",{
+ timeZone:TZ,weekday:"long",day:"numeric",month:"long",year:"numeric"
+});
 
 function updateTime(){
- const now=new Date();
- const p={};
+ const now=new Date(),p={};
  clockFmt.formatToParts(now).forEach(x=>p[x.type]=x.value);
  const h=Number(p.hour)%24;
- $("clockBox").textContent=String(h%12||12).padStart(2,"0")+":"+p.minute+" "+(h<12?"صباحاً":"مساءً");
+ $("clockBox").textContent=
+  String(h%12||12).padStart(2,"0")+":"+p.minute+
+  (h<12?" صباحاً":" مساءً");
  $("dateStr").textContent=dateFmt.format(now);
 }
 setInterval(updateTime,1000);
 updateTime();
 
-/* ---------- تصنيف الحالة الجوية ---------- */
-const symOf=e=>e.data.next_1_hours?.summary?.symbol_code??e.data.next_6_hours?.summary?.symbol_code??e.data.next_12_hours?.summary?.symbol_code??"";
-const precipOf=e=>num(e.data.next_1_hours?.details?.precipitation_amount??e.data.next_6_hours?.details?.precipitation_amount)||0;
+function getPeriod(e){
+ const choices=[
+  ["next_1_hours",1],
+  ["next_6_hours",6],
+  ["next_12_hours",12]
+ ];
+ for(const [key,hours] of choices){
+  const v=e.data[key]?.details?.precipitation_amount;
+  if(v!==undefined&&v!==null){
+   return{mm:Math.max(0,num(v)||0),hours};
+  }
+ }
+ return{mm:0,hours:0};
+}
 
 function kindOf(sym){
- sym=String(sym||"");
- if(/thunder/.test(sym))return"thunder";
- if(/snow/.test(sym))return"snow";
+ sym=String(sym||"").toLowerCase();
+ if(sym.includes("thunder"))return"thunder";
+ if(sym.includes("snow"))return"snow";
  if(/rain|sleet|drizzle/.test(sym))return"rain";
- if(/fog/.test(sym))return"fog";
+ if(sym.includes("fog"))return"fog";
  return"none";
 }
 
-/* الغيوم المنخفضة والمتوسطة تحجب الشمس، والعالية الرقيقة تُحتسب بربعها */
+const symOf=e=>
+ e.data.next_1_hours?.summary?.symbol_code??
+ e.data.next_6_hours?.summary?.symbol_code??
+ e.data.next_12_hours?.summary?.symbol_code??"";
+
 function effOf(d){
- const lo=num(d.cloud_area_fraction_low),mi=num(d.cloud_area_fraction_medium),hi=num(d.cloud_area_fraction_high);
- if([lo,mi,hi].every(finite))return Math.min(100,Math.max(lo,mi)+.25*hi);
- const t=num(d.cloud_area_fraction);
- return finite(t)?t:0;
+ const lo=num(d.cloud_area_fraction_low);
+ const mi=num(d.cloud_area_fraction_medium);
+ const hi=num(d.cloud_area_fraction_high);
+ if([lo,mi,hi].every(finite))
+  return Math.min(100,Math.max(lo,mi)+.25*hi);
+ const v=num(d.cloud_area_fraction);
+ return finite(v)?v:0;
 }
 
 function cloudWx(e,night){
@@ -152,80 +299,253 @@ function cloudWx(e,night){
  return["☁️","غائم"];
 }
 
-const uvTxt=u=>u<3?"منخفض":u<6?"معتدل":u<8?"مرتفع":u<11?"مرتفع جداً":"شديد";
+function uvTxt(u){
+ if(u<3)return"منخفض";
+ if(u<6)return"معتدل";
+ if(u<8)return"مرتفع";
+ if(u<11)return"مرتفع جداً";
+ return"شديد";
+}
 
-/* ---------- التوقعات اليومية ---------- */
-const dayKey=ms=>new Date(ms+OFF*1000).toISOString().slice(0,10);
+function dayKey(ms){
+ return new Date(ms+OFF*1000).toISOString().slice(0,10);
+}
+
+function timeLabel(ms){
+ return new Intl.DateTimeFormat("ar-IQ",{
+  timeZone:TZ,hour:"numeric",minute:"2-digit",hour12:true
+ }).format(new Date(ms));
+}
 
 function buildDaily(ts,now){
  const days={};
+
  for(const e of ts){
   const t=Date.parse(e.time);
   if(!finite(t))continue;
+
   const key=dayKey(t);
-  const o=days[key]||(days[key]={n:0,hi:-Infinity,lo:Infinity,pr:0,wind:0,cl:[],thunder:false,snow:false});
+  const o=days[key]||(days[key]={
+   n:0,hi:-Infinity,lo:Infinity,pr:0,
+   wind:0,cloud:[],thunder:false,snow:false
+  });
+
   const d=e.data.instant.details;
   o.n++;
-  const tt=num(d.air_temperature);
-  if(finite(tt)){o.hi=Math.max(o.hi,tt);o.lo=Math.min(o.lo,tt);}
+
+  const temp=num(d.air_temperature);
+  if(finite(temp)){
+   o.hi=Math.max(o.hi,temp);
+   o.lo=Math.min(o.lo,temp);
+  }
+
   const ws=num(d.wind_speed)*3.6;
   if(finite(ws))o.wind=Math.max(o.wind,ws);
-  const hr=new Date(t+OFF*1000).getUTCHours();
-  if(hr>=7&&hr<=17)o.cl.push(effOf(d));
-  o.pr+=precipOf(e);
+
+  const hour=new Date(t+OFF*1000).getUTCHours();
+  if(hour>=7&&hour<=17)o.cloud.push(effOf(d));
+
+  /* تُضاف كمية كل فترة مرة واحدة إلى يوم بداية الفترة */
+  o.pr+=getPeriod(e).mm;
+
   const k=kindOf(symOf(e));
   if(k==="thunder")o.thunder=true;
   if(k==="snow")o.snow=true;
  }
+
  const today=dayKey(now);
- return Object.keys(days).sort().filter(k=>k>today&&days[k].n>=3&&finite(days[k].hi)).slice(0,5).map(k=>{
-  const o=days[k];
-  let info;
-  if(o.thunder)info=["⛈️","عواصف رعدية"];
-  else if(o.snow)info=["❄️","ثلوج"];
-  else if(o.pr>=3)info=["🌧️","أمطار"];
-  else if(o.pr>=.5)info=["🌦️","زخات مطر"];
-  else if(o.wind>=45)info=["🌬️","نشاط رياح"];
-  else info=cloudWx(o.cl.length?o.cl.reduce((a,b)=>a+b,0)/o.cl.length:0,false);
-  return{hi:Math.round(o.hi),lo:Math.round(o.lo),info,dn:new Date(k+"T00:00:00Z").getUTCDay()};
- });
+
+ return Object.keys(days).sort()
+  .filter(k=>k>=today&&days[k].n>=3&&finite(days[k].hi))
+  .slice(0,5)
+  .map(k=>{
+   const o=days[k];
+   let info;
+
+   if(o.thunder)info=["⛈️","احتمال عواصف رعدية"];
+   else if(o.snow)info=["❄️","ثلوج متوقعة"];
+   else if(o.pr>=3)info=["🌧️","أمطار متوقعة"];
+   else if(o.pr>=.5)info=["🌦️","زخات مطر محتملة"];
+   else if(o.wind>=45)info=["🌬️","نشاط رياح"];
+   else{
+    const avg=o.cloud.length?
+     o.cloud.reduce((a,b)=>a+b,0)/o.cloud.length:0;
+    info=cloudWx(avg,false);
+   }
+
+   return{
+    hi:Math.round(o.hi),
+    lo:Math.round(o.lo),
+    info,
+    dn:new Date(k+"T00:00:00Z").getUTCDay()
+   };
+  });
 }
 
-/* ---------- تنبيه الـ 12 ساعة القادمة ---------- */
 function buildAlert(ts,ci,now){
- let thunder=false,wet=false,gust=0;
+ const limit=now+18*3600e3;
+ let thunder=null,rain=null;
+ let peakGust=0,heavy=false,totalRain=0;
+
  for(let i=ci;i<ts.length;i++){
-  const e=ts[i],t=Date.parse(e.time);
-  if(t>now+12*3600e3)break;
+  const e=ts[i];
+  const start=Date.parse(e.time);
+  if(!finite(start)||start>limit)break;
+
   const d=e.data.instant.details;
   const k=kindOf(symOf(e));
-  if(k==="thunder")thunder=true;
-  if(k==="rain"||precipOf(e)>.2)wet=true;
-  const g=num(d.wind_speed_of_gust),w=num(d.wind_speed);
-  const gk=(finite(g)?g:(finite(w)?w*1.4:0))*3.6;
-  gust=Math.max(gust,gk);
+  const p=getPeriod(e);
+  const duration=p.hours||1;
+  const end=start+duration*3600e3;
+
+  const g=num(d.wind_speed_of_gust);
+  const w=num(d.wind_speed);
+  const gust=finite(g)?g*3.6:NaN;
+
+  if(finite(gust))peakGust=Math.max(peakGust,gust);
+
+  if(k==="thunder"&&!thunder)thunder={start,end};
+  if((k==="rain"||p.mm>=.2)&&!rain)rain={start,end};
+
+  if((p.hours<=3&&p.mm>=7.5)||
+     (p.hours<=6&&p.mm>=10))heavy=true;
+
+  totalRain+=p.mm;
  }
+
  const parts=[];
- if(thunder)parts.push("⚡ عواصف رعدية وبرق");
- if(wet)parts.push("🌧️ أمطار متوقعة");
- if(gust>=65)parts.push(`💨 رياح عاصفة، هبات حتى ${Math.round(gust)} كم/س`);
- else if(gust>=45)parts.push(`💨 رياح قوية، هبات حتى ${Math.round(gust)} كم/س`);
- return parts.length?"تنبيه جوي: "+parts.join(" · "):"";
+
+ if(thunder){
+  parts.push(
+   "⛈️ احتمال أمطار رعدية ابتداءً من "+
+   timeLabel(thunder.start)+
+   "، والفترة المتوقعة حتى "+timeLabel(thunder.end)
+  );
+ }
+
+ if(rain&&!thunder){
+  parts.push(
+   "🌧️ احتمال هطول أمطار ابتداءً من "+
+   timeLabel(rain.start)+
+   "، والفترة المتوقعة حتى "+timeLabel(rain.end)
+  );
+ }
+
+ if(heavy){
+  parts.push(
+   "⚠️ توجد إشارة إلى هطولات قد تكون غزيرة؛ " +
+   "مجموع الكميات المتوقعة في الفترة المفحوصة نحو "+
+   totalRain.toFixed(1)+" ملم"
+  );
+ }
+
+ if(peakGust>=65){
+  parts.push("💨 هبات رياح قوية جداً قد تصل إلى "+
+   Math.round(peakGust)+" كم/س");
+ }else if(peakGust>=45){
+  parts.push("💨 هبات رياح نشطة قد تصل إلى "+
+   Math.round(peakGust)+" كم/س");
+ }
+
+ if(!parts.length)return null;
+
+ const level=(heavy||peakGust>=65)?"severe":
+  (thunder||peakGust>=45)?"warning":"info";
+
+ return{message:parts.join(" · "),level};
 }
 
-/* ---------- جلب البيانات ---------- */
+function buildDust(data,now){
+ const h=data?.hourly;
+ if(!h||!Array.isArray(h.time)||!Array.isArray(h.dust))
+  throw Error("CAMS dust data unavailable");
+
+ const rows=h.time.map((time,i)=>({
+  time:Date.parse(time),
+  dust:num(h.dust[i]),
+  pm10:num(h.pm10?.[i])
+ })).filter(x=>finite(x.time)&&finite(x.dust)&&x.time>=now-60*60e3);
+
+ if(!rows.length)throw Error("No dust forecast");
+
+ const future=rows.filter(x=>x.time>=now-60*60e3);
+ const peak=future.reduce((a,b)=>b.dust>a.dust?b:a,future[0]);
+ const elevated=future.filter(x=>x.dust>=100);
+ const severe=future.filter(x=>x.dust>=200);
+
+ let state="لا توجد إشارة مرتفعة للغبار";
+ let level="";
+ let detail="حسب توقعات CAMS المتاحة، لا تظهر إشارة مرتفعة للغبار السطحي.";
+
+ if(severe.length){
+  state="إشارة غبار مرتفعة";
+  level="high";
+  detail="يتوقع النموذج ارتفاع الغبار السطحي إلى "+
+   Math.round(peak.dust)+" ميكروغرام/م³ تقريباً عند "+
+   timeLabel(peak.time)+".";
+ }else if(elevated.length){
+  state="احتمال ارتفاع الغبار";
+  level="watch";
+  detail="يتوقع النموذج ارتفاعاً محتملاً للغبار السطحي إلى "+
+   Math.round(peak.dust)+" ميكروغرام/م³ تقريباً عند "+
+   timeLabel(peak.time)+".";
+ }
+
+ const first=elevated[0];
+ if(first&&first.time>now+45*60e3){
+  detail+=" بداية الإشارة المتوقعة تقريباً "+
+   timeLabel(first.time)+".";
+ }
+
+ return{
+  state,level,detail,
+  current:rows[0].dust,
+  peak:peak.dust,
+  peakTime:peak.time
+ };
+}
+
+function renderDust(d){
+ const el=$("dustBox");
+ el.hidden=false;
+
+ if(!d){
+  el.className="dustbox";
+  el.innerHTML=
+   "<b>🌫️ متابعة الغبار</b>"+
+   "تعذر جلب بيانات الغبار حالياً؛ لا يمكن تأكيد وجود الغبار أو نفيه."+
+   "<small>المصدر: CAMS Global عبر Open-Meteo</small>";
+  return;
+ }
+
+ el.className="dustbox "+d.level;
+ el.innerHTML=
+  `<b>🌫️ ${d.state}</b>${d.detail}`+
+  `<small>أعلى قيمة غبار متوقعة: ${Math.round(d.peak)} ميكروغرام/م³`+
+  ` · الوقت: ${timeLabel(d.peakTime)}</small>`+
+  `<small>هذه توقعات نموذجية وليست قياس محطة أرضية أو إنذاراً رسمياً. `+
+  `دقة شبكة CAMS العالمية محدودة مكانياً، وقد لا ترصد الغبار المحلي بدقة.</small>`;
+}
+
 function getJSON(url){
  const ctl=new AbortController();
- const t=setTimeout(()=>ctl.abort(),15000);
+ const timer=setTimeout(()=>ctl.abort(),15000);
+
  return fetch(url,{signal:ctl.signal})
-  .then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json();})
-  .finally(()=>clearTimeout(t));
+  .then(r=>{
+   if(!r.ok)throw Error("HTTP "+r.status);
+   return r.json();
+  })
+  .finally(()=>clearTimeout(timer));
 }
 
 let hasData=false,loading=false,retryT=0;
 
 function setLive(ok){
- $("liveTxt").textContent=ok?"تحديث مباشر الآن":"تعذر التحديث · آخر بيانات محفوظة";
+ $("liveTxt").textContent=ok?
+  "آخر تحديث لبيانات التوقعات":
+  "تعذر التحديث · آخر بيانات متاحة";
+
  $("liveDot").style.background=ok?"#22e05a":"#f5b02e";
  $("liveDot").style.boxShadow=ok?"0 0 8px #22e05a":"none";
 }
@@ -233,92 +553,152 @@ function setLive(ok){
 async function fetchWeather(){
  if(loading)return;
  loading=true;
+
  try{
-  const data=await getJSON(URL_MET);
+  const results=await Promise.allSettled([
+   getJSON(URL_MET),
+   getJSON(URL_DUST)
+  ]);
+
+  if(results[1].status==="fulfilled"){
+   try{
+    renderDust(buildDust(results[1].value,Date.now()));
+   }catch(err){
+    console.warn("Dust:",err);
+    renderDust(null);
+   }
+  }else{
+   renderDust(null);
+  }
+
+  if(results[0].status!=="fulfilled"){
+   throw Error("تعذر جلب توقعات الطقس");
+  }
+
+  const data=results[0].value;
   const ts=data?.properties?.timeseries;
-  if(!Array.isArray(ts)||ts.length<20)throw Error("بيانات الطقس غير مكتملة");
+
+  if(!Array.isArray(ts)||ts.length<20)
+   throw Error("بيانات الطقس غير مكتملة");
 
   const now=Date.now();
   let ci=0,best=Infinity;
-  ts.forEach((e,i)=>{const dt=Math.abs(Date.parse(e.time)-now);if(dt<best){best=dt;ci=i;}});
-  const cur=ts[ci],d=cur.data.instant.details;
 
-  const tRaw=num(d.air_temperature);
-  if(!finite(tRaw))throw Error("بيانات الحرارة غير متوفرة");
-  const t=Math.round(tRaw);
-  const h=finite(num(d.relative_humidity))?Math.round(num(d.relative_humidity)):0;
-  const wms=num(d.wind_speed)||0;
-  const ws=Math.round(wms*3.6);
-  const p=Math.round(num(d.air_pressure_at_sea_level)||0);
+  ts.forEach((e,i)=>{
+   const dt=Math.abs(Date.parse(e.time)-now);
+   if(dt<best){best=dt;ci=i;}
+  });
 
-  /* الحرارة المحسوسة (معادلة Steadman) */
-  const ev=(h/100)*6.105*Math.exp(17.27*tRaw/(237.7+tRaw));
-  const feels=Math.round(tRaw+.33*ev-.7*wms-4);
+  const cur=ts[ci];
+  const d=cur.data.instant.details;
 
-  /* مؤشر UV: سماء صافية مخفَّض حسب الغيوم (ويساوي 0 ليلاً في بيانات المصدر) */
+  const rawT=num(d.air_temperature);
+  if(!finite(rawT))throw Error("الحرارة غير متوفرة");
+
+  const humidity=num(d.relative_humidity);
+  const wind=num(d.wind_speed);
+  const pressure=num(d.air_pressure_at_sea_level);
+
+  const temp=Math.round(rawT);
+  const hum=finite(humidity)?Math.round(humidity):null;
+  const windKmh=finite(wind)?Math.round(wind*3.6):null;
+  const press=finite(pressure)?Math.round(pressure):null;
+
   const eff=effOf(d);
+
+  /* تقدير الحرارة المحسوسة */
+  let feels=temp;
+  if(finite(humidity)&&finite(wind)){
+   const vapor=(humidity/100)*6.105*
+    Math.exp(17.27*rawT/(237.7+rawT));
+   feels=Math.round(rawT+.33*vapor-.7*wind-4);
+  }
+
+  /* UV: القيمة المفقودة تبقى غير متاحة ولا تُحوّل إلى صفر */
   const uvClear=num(d.ultraviolet_index_clear_sky);
-  const uv=finite(uvClear)?Math.max(0,uvClear*(1-.75*Math.pow(eff/100,3.4))):0;
+  const uv=finite(uvClear)?
+   Math.max(0,uvClear*(1-.75*Math.pow(eff/100,3.4))):NaN;
 
-  /* الحالة الحالية */
   const kind=kindOf(symOf(cur));
-  const precip=precipOf(cur);
-  const hr=new Date(now+OFF*1000).getUTCHours();
-  const night=hr<6||hr>=18;
-  let w;
-  if(kind==="thunder")w=["⛈️","عواصف رعدية"];
-  else if(kind==="snow")w=["❄️","ثلوج"];
-  else if(kind==="rain"||precip>=.2)w=["🌧️",precip>=1?"أمطار":"زخات مطر"];
-  else if(kind==="fog")w=["🌫️","ضباب"];
-  else w=cloudWx(eff,night);
+  const precip=getPeriod(cur).mm;
+  const hour=new Date(now+OFF*1000).getUTCHours();
+  const night=hour<6||hour>=18;
 
-  $("tempVal").textContent=t+"°C";
-  $("humidityVal").textContent=h+"%";
-  $("windVal").textContent=ws+" كم/س";
-  $("pressureVal").textContent=p+" hPa";
-  $("uvVal").textContent=Math.round(uv)+" ("+uvTxt(uv)+")";
+  let wx;
+  if(kind==="thunder")wx=["⛈️","احتمال عواصف رعدية"];
+  else if(kind==="snow")wx=["❄️","ثلوج متوقعة"];
+  else if(kind==="rain"||precip>=.2)
+   wx=["🌧️",precip>=1?"أمطار متوقعة":"احتمال زخات مطر"];
+  else if(kind==="fog")wx=["🌫️","ضباب متوقع"];
+  else wx=cloudWx(eff,night);
+
+  $("tempVal").textContent=temp+"°C";
+  $("humidityVal").textContent=hum===null?"غير متاح":hum+"%";
+  $("windVal").textContent=windKmh===null?"غير متاح":windKmh+" كم/س";
+  $("pressureVal").textContent=press===null?"غير متاح":press+" hPa";
+  $("uvVal").textContent=finite(uv)?
+   Math.round(uv)+" ("+uvTxt(uv)+")":"غير متاح";
+
   $("feelsLike").textContent="الحرارة المحسوسة: "+feels+"°C";
-  $("weatherIco").textContent=w[0];
-  $("conditionText").textContent=w[1];
+  $("weatherIco").textContent=wx[0];
+  $("conditionText").textContent=wx[1];
 
-  const al=buildAlert(ts,ci,now);
-  $("alertBox").textContent=al;
-  $("alertBox").hidden=!al;
+  const alert=buildAlert(ts,ci,now);
+  const al=$("alertBox");
+
+  al.hidden=!alert;
+  if(alert){
+   al.textContent=alert.message;
+   al.className="alert "+alert.level;
+  }
 
   const daily=buildDaily(ts,now);
-  if(daily.length){
-   $("forecastList").innerHTML=daily.map(x=>
-    `<div class="forecast-row"><div class="forecast-ico">${x.info[0]}</div><div class="forecast-info"><span class="forecast-day">${DAYS[x.dn]}</span><span class="forecast-desc">${x.info[1]}</span></div><div class="forecast-temp">${x.hi}° / ${x.lo}°</div></div>`
-   ).join("");
-  }
+
+  $("forecastList").innerHTML=daily.length?
+   daily.map(x=>
+    `<div class="forecast-row">`+
+    `<div class="forecast-ico">${x.info[0]}</div>`+
+    `<div class="forecast-info">`+
+    `<span class="forecast-day">${DAYS[x.dn]}</span>`+
+    `<span class="forecast-desc">${x.info[1]}</span>`+
+    `</div>`+
+    `<div class="forecast-temp">${x.hi}° / ${x.lo}°</div>`+
+    `</div>`
+   ).join(""):
+   '<div style="text-align:center;padding:10px">لا توجد توقعات يومية كافية.</div>';
 
   hasData=true;
   setLive(true);
   clearTimeout(retryT);
+
  }catch(err){
   console.error("Weather:",err);
+
   if(hasData){
    setLive(false);
   }else{
    $("liveTxt").textContent="تعذر الاتصال بخدمة الطقس";
    $("liveDot").style.background="#999";
-   $("liveDot").style.boxShadow="none";
-   $("conditionText").textContent="الطقس غير متاح الآن";
+   $("conditionText").textContent="الطقس غير متاح حالياً";
    $("forecastList").textContent="لا توجد توقعات متاحة حالياً.";
   }
+
   clearTimeout(retryT);
   retryT=setTimeout(fetchWeather,hasData?60000:30000);
+
  }finally{
   loading=false;
  }
 }
 
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)fetchWeather();});
+document.addEventListener("visibilitychange",()=>{
+ if(!document.hidden)fetchWeather();
+});
 
-/* تسجيل الـ Service Worker */
 if("serviceWorker"in navigator){
  window.addEventListener("load",()=>{
-  navigator.serviceWorker.register("./sw.js").catch(err=>console.error("SW:",err));
+  navigator.serviceWorker.register("./sw.js")
+   .catch(err=>console.error("SW:",err));
  });
 }
 
