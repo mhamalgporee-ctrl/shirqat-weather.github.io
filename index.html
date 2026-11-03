@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&display=swap" rel="stylesheet">
+
 <style>
 :root{--gold:#f5b02e;--gold2:#ffd166;--muted:#eaf3ff;--line:rgba(255,255,255,.18)}
 *,*::before,*::after{box-sizing:border-box}
@@ -49,10 +50,12 @@ h1{margin:0;font-size:clamp(.9rem,3vw,1.25rem);font-weight:900;color:#ffe08a;lin
 .sun:before{content:"";position:absolute;inset:-45%;border-radius:50%;background:repeating-conic-gradient(#ffdc5080 0 6deg,transparent 6deg 24deg);-webkit-mask:radial-gradient(circle,transparent 38%,#000 40%,transparent 70%);mask:radial-gradient(circle,transparent 38%,#000 40%,transparent 70%);animation:spin 30s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .temp{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:900;line-height:1;direction:ltr;white-space:nowrap}
-.desc{font-size:clamp(1.05rem,3.6vw,1.35rem);font-weight:900;color:var(--gold2);text-align:end}
-.descrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+/* تكبير عبارة حالة الطقس */
+.desc{font-size:clamp(1.2rem,4vw,1.55rem);font-weight:900;color:var(--gold2);text-align:end}
+.descrow{display:flex;align-items:center;justify-content:flex-start;gap:8px}
 .descrow .desc{flex-shrink:0}
-.tag{flex:1;min-width:0;font-size:.75rem;font-weight:700;color:#eaf3ff;line-height:1.35;text-align:start}
+
 .feels{text-align:end;font-weight:800;margin-top:8px;font-size:.85rem}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:5px;border-top:1px solid var(--line);padding-top:4px}
 .stat{text-align:center;padding:2px;border-inline-start:1px solid var(--line);min-width:0}
@@ -96,67 +99,146 @@ h1{margin:0;font-size:clamp(.9rem,3vw,1.25rem);font-weight:900;color:#ffe08a;lin
 #dcHM{font-size:1.35rem;line-height:1.1}
 .dc-s{font-size:.8rem;color:#ff6b5e;min-width:1.3em}
 .dc-ap{font-size:.7rem;color:#eaf3ff;margin-top:2px}
-@media(max-width:850px){.grid{grid-template-columns:1fr}.current{order:1}.fc{order:2}
+
+@media(max-width:850px){
+.grid{grid-template-columns:1fr}
+.current{order:1}
+.fc{order:2}
 .standalone .wrap{min-height:calc(100vh - 12px);min-height:calc(100dvh - 12px)}
 .standalone .grid{flex:1;display:flex;flex-direction:column}
 .standalone .current{flex:1}
-.standalone .fc{flex:none}}
-@media(max-width:600px){body{padding:6px 10px 8px}header{flex-wrap:nowrap;gap:8px}.title{gap:8px}.ctrl{gap:6px;flex-shrink:0}.digital-clock{min-width:80px;padding:3px 6px}#dcHM{font-size:1.2rem}.dc-ap{margin-top:0}}
-@media(prefers-reduced-motion:reduce){.dot,.hero,.sun:before{animation:none}.refresh{transition:none}.fc-wrap,.fc-btn .arrow{transition:none}}
+.standalone .fc{flex:none}
+}
+@media(max-width:600px){
+body{padding:6px 10px 8px}
+header{flex-wrap:nowrap;gap:8px}
+.title{gap:8px}
+.ctrl{gap:6px;flex-shrink:0}
+.digital-clock{min-width:80px;padding:3px 6px}
+#dcHM{font-size:1.2rem}
+.dc-ap{margin-top:0}
+}
+@media(prefers-reduced-motion:reduce){
+.dot,.hero,.sun:before{animation:none}
+.refresh{transition:none}
+.fc-wrap,.fc-btn .arrow{transition:none}
+}
 </style>
 </head>
+
 <body>
 <canvas id="fx" aria-hidden="true"></canvas>
+
 <div class="wrap">
+
 <header>
- <div class="title"><div class="ico">🌤️</div><div><h1>طقس الشرقاط المباشر</h1></div></div>
+ <div class="title">
+  <div class="ico">🌤️</div>
+  <div><h1>طقس الشرقاط المباشر</h1></div>
+ </div>
+
  <div class="ctrl">
   <div class="digital-clock" id="digitalClock" title="الوقت الحالي بتوقيت بغداد" dir="ltr">
-   <div class="dc-main"><span id="dcHM">--:--</span><span class="dc-s" id="dcS">--</span></div><div class="dc-ap" id="dcAP"></div>
+   <div class="dc-main">
+    <span id="dcHM">--:--</span>
+    <span class="dc-s" id="dcS">--</span>
+   </div>
+   <div class="dc-ap" id="dcAP"></div>
   </div>
   <button class="refresh" id="ref" type="button" title="تحديث البيانات" aria-label="تحديث البيانات">↻</button>
  </div>
 </header>
+
 <div class="grid">
+
  <aside class="fc">
-  <button class="fc-btn" id="fcToggle" type="button" aria-expanded="false" aria-controls="fcWrap"><span>📅 توقعات الـ 5 أيام القادمة</span><span class="arrow">▼</span></button>
-  <div class="fc-wrap" id="fcWrap"><div class="fc-inner">
-   <div id="fcList"><div class="note">جارٍ تحميل التوقعات...</div></div><div class="note">🕒 تتحدث البيانات تلقائياً كل 10 دقائق</div><div class="note" id="src"></div>
-  </div></div>
+  <button class="fc-btn" id="fcToggle" type="button" aria-expanded="false" aria-controls="fcWrap">
+   <span>📅 توقعات الـ 5 أيام القادمة</span>
+   <span class="arrow">▼</span>
+  </button>
+
+  <div class="fc-wrap" id="fcWrap">
+   <div class="fc-inner">
+    <div id="fcList"><div class="note">جارٍ تحميل التوقعات...</div></div>
+    <div class="note">🕒 تتحدث البيانات تلقائياً كل 10 دقائق</div>
+    <div class="note" id="src"></div>
+   </div>
+  </div>
  </aside>
+
  <section class="current" aria-live="polite">
   <div>
-   <span class="live"><span class="dot" id="liveDot"></span><span id="liveTxt">جارٍ التحميل…</span></span>
+   <span class="live">
+    <span class="dot" id="liveDot"></span>
+    <span id="liveTxt">جارٍ التحميل…</span>
+   </span>
+
    <div class="alert" id="alert" role="alert" hidden></div>
+
    <div class="cur-main">
-    <div><h2 class="city" id="cityName">الشرقاط</h2><div class="date" id="date"></div></div>
-    <div class="big"><div class="hero" id="hero">🌤️</div><div class="temp" id="temp">--°C</div></div>
+    <div>
+     <h2 class="city" id="cityName">الشرقاط</h2>
+     <div class="date" id="date"></div>
+    </div>
+    <div class="big">
+     <div class="hero" id="hero">🌤️</div>
+     <div class="temp" id="temp">--°C</div>
+    </div>
    </div>
-   <div class="descrow"><div class="tag" id="tag" hidden>🏖️ جو مال ونسة على الشاطي</div><div class="desc" id="desc">جارٍ جلب حالة الطقس</div></div><div class="feels" id="feels"></div>
+
+   <!-- عرض حالة الطقس فقط بدون العبارة المحذوفة -->
+   <div class="descrow">
+    <div class="desc" id="desc">جارٍ جلب حالة الطقس</div>
+   </div>
+
+   <div class="feels" id="feels"></div>
   </div>
+
   <div class="stats">
-   <div class="stat"><div class="i">☀️</div><div class="t">مؤشر UV</div><div class="v" id="uv">--</div></div>
-   <div class="stat"><div class="i">🧭</div><div class="t">الضغط</div><div class="v" id="pr">--</div></div>
-   <div class="stat"><div class="i">💧</div><div class="t">الرطوبة</div><div class="v" id="hu">--</div></div>
-   <div class="stat"><div class="i">🌬️</div><div class="t">الرياح</div><div class="v" id="wi">--</div></div>
+   <div class="stat">
+    <div class="i">☀️</div>
+    <div class="t">مؤشر UV</div>
+    <div class="v" id="uv">--</div>
+   </div>
+   <div class="stat">
+    <div class="i">🧭</div>
+    <div class="t">الضغط</div>
+    <div class="v" id="pr">--</div>
+   </div>
+   <div class="stat">
+    <div class="i">💧</div>
+    <div class="t">الرطوبة</div>
+    <div class="v" id="hu">--</div>
+   </div>
+   <div class="stat">
+    <div class="i">🌬️</div>
+    <div class="t">الرياح</div>
+    <div class="v" id="wi">--</div>
+   </div>
   </div>
  </section>
+
 </div>
+
 <div class="banner">
  <div class="pill">مرحباً بكم في موقع الشرقاط الثقافي</div>
  <div class="by">تصميم وإعداد محمد علي أحمد الحطاب الجبوري</div>
  <a href="https://mhamalgporee-ctrl.github.io/" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:5px;padding:4px 14px;font-size:.85rem;border-radius:999px;background:#f5b02e;color:#0d2137;font-weight:900;text-decoration:none;text-shadow:none">اضغط هنا لمعاينة الموقع</a>
 </div>
+
 </div>
+
 <script>
 "use strict";
 
 const $=id=>document.getElementById(id);
+
 /* عند فتح الصفحة مباشرة (وليس داخل إطار) نترك فراغاً بالوسط ليظهر المشهد الحي */
 if(parent===window)document.documentElement.classList.add("standalone");
+
 /* مركز مدينة الشرقاط (مركز القضاء): 35°30′13″N 43°13′57″E */
 const LAT=35.5036,LON=43.2325,TZ="Asia/Baghdad",CITY="الشرقاط";
-const OFF=3*3600; /* العراق UTC+3 طوال العام */
+const OFF=3*3600;
 const DAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -185,9 +267,11 @@ function updateClock(){
  const p={};
  clockFmt.formatToParts(new Date()).forEach(x=>p[x.type]=x.value);
  const h=Number(p.hour)%24;
+
  $("dcHM").textContent=String(h%12||12).padStart(2,"0")+":"+p.minute;
  $("dcS").textContent=p.second;
  $("dcAP").textContent=h<12?"صباحاً":"مساءً";
+
  if(p.minute!==lastMin){
   lastMin=p.minute;
   if(S){
@@ -196,10 +280,11 @@ function updateClock(){
   }
  }
 }
+
 setInterval(updateClock,1000);
 updateClock();
 
-/* ---------- الشمس: حساب الشروق والغروب محلياً لمركز الشرقاط (بدون أي خدمة خارجية) ---------- */
+/* ---------- الشمس: حساب الشروق والغروب محلياً لمركز الشرقاط ---------- */
 function sunTimes(ms){
  const rad=Math.PI/180;
  const loc=new Date(ms+OFF*1000);
@@ -207,13 +292,20 @@ function sunTimes(ms){
  const midnight=Date.UTC(y,m,dd);
  const N=Math.floor((midnight-Date.UTC(y,0,1))/864e5)+1;
  const g=2*Math.PI/365*(N-1);
+
  const eqt=229.18*(0.000075+0.001868*Math.cos(g)-0.032077*Math.sin(g)-0.014615*Math.cos(2*g)-0.040849*Math.sin(2*g));
+
  const decl=0.006918-0.399912*Math.cos(g)+0.070257*Math.sin(g)-0.006758*Math.cos(2*g)+0.000907*Math.sin(2*g)-0.002697*Math.cos(3*g)+0.00148*Math.sin(3*g);
+
  const lat=LAT*rad;
  const c=Math.cos(90.833*rad)/(Math.cos(lat)*Math.cos(decl))-Math.tan(lat)*Math.tan(decl);
  const ha=Math.acos(Math.max(-1,Math.min(1,c)))/rad;
  const noon=720-4*LON-eqt;
- return{sr:midnight+(noon-4*ha)*60000,ss:midnight+(noon+4*ha)*60000};
+
+ return{
+  sr:midnight+(noon-4*ha)*60000,
+  ss:midnight+(noon+4*ha)*60000
+ };
 }
 
 /* ---------- تصنيف الحالة الجوية ---------- */
@@ -227,14 +319,18 @@ function kindOf(sym){
  if(FOG_RE.test(sym))return"fog";
  return"none";
 }
+
 const symOf=e=>e.data.next_1_hours?.summary?.symbol_code??e.data.next_6_hours?.summary?.symbol_code??e.data.next_12_hours?.summary?.symbol_code??"";
+
 const precipOf=e=>num(e.data.next_1_hours?.details?.precipitation_amount??e.data.next_6_hours?.details?.precipitation_amount)||0;
 
-/* الغطاء السحابي الفعلي: الغيوم المنخفضة والمتوسطة هي التي تحجب الشمس،
-   أما الغيوم العالية الرقيقة (سيروس) فتُحتسب بربعها فقط */
+/* الغطاء السحابي الفعلي */
 function effOf(d){
  const lo=num(d.cloud_area_fraction_low),mi=num(d.cloud_area_fraction_medium),hi=num(d.cloud_area_fraction_high);
- if([lo,mi,hi].every(Number.isFinite))return Math.min(100,Math.max(lo,mi)+.25*hi);
+
+ if([lo,mi,hi].every(Number.isFinite))
+  return Math.min(100,Math.max(lo,mi)+.25*hi);
+
  const t=num(d.cloud_area_fraction);
  return Number.isFinite(t)?t:0;
 }
@@ -266,71 +362,107 @@ const dayKey=ms=>new Date(ms+OFF*1000).toISOString().slice(0,10);
 
 function buildDaily(ts,now){
  const days={};
+
  for(const e of ts){
   const t=Date.parse(e.time);
   if(!Number.isFinite(t))continue;
+
   const key=dayKey(t);
   const o=days[key]||(days[key]={n:0,hi:-Infinity,lo:Infinity,pr:0,wind:0,cl:[],thunder:false,snow:false});
   const d=e.data.instant.details;
+
   o.n++;
+
   const tt=num(d.air_temperature);
-  if(Number.isFinite(tt)){o.hi=Math.max(o.hi,tt);o.lo=Math.min(o.lo,tt);}
+  if(Number.isFinite(tt)){
+   o.hi=Math.max(o.hi,tt);
+   o.lo=Math.min(o.lo,tt);
+  }
+
   const n6=e.data.next_6_hours?.details;
   if(n6&&!e.data.next_1_hours){
    const mx=num(n6.air_temperature_max),mn=num(n6.air_temperature_min);
    if(Number.isFinite(mx))o.hi=Math.max(o.hi,mx);
    if(Number.isFinite(mn))o.lo=Math.min(o.lo,mn);
   }
+
   const ws=num(d.wind_speed)*3.6;
   if(Number.isFinite(ws))o.wind=Math.max(o.wind,ws);
+
   const h=new Date(t+OFF*1000).getUTCHours();
   if(h>=7&&h<=17)o.cl.push(effOf(d));
+
   o.pr+=precipOf(e);
+
   const k=kindOf(symOf(e));
   if(k==="thunder")o.thunder=true;
   if(k==="snow")o.snow=true;
  }
+
  const today=dayKey(now);
- return Object.keys(days).sort().filter(k=>k>today&&days[k].n>=3&&Number.isFinite(days[k].hi)).slice(0,5).map(k=>{
+
+ return Object.keys(days).sort()
+ .filter(k=>k>today&&days[k].n>=3&&Number.isFinite(days[k].hi))
+ .slice(0,5)
+ .map(k=>{
   const o=days[k];
   let info;
+
   if(o.thunder)info=["⛈️","عواصف رعدية","rain"];
   else if(o.snow)info=["❄️","ثلوج","snow"];
   else if(o.pr>=3)info=["🌧️","أمطار","rain"];
   else if(o.pr>=.5)info=["🌦️","زخات مطر","rain"];
   else if(o.wind>=45)info=["🌬️","نشاط رياح","wind"];
   else info=cloudWx(o.cl.length?o.cl.reduce((a,b)=>a+b,0)/o.cl.length:0,true);
-  return{hi:Math.round(o.hi),lo:Math.round(o.lo),info,dn:new Date(k+"T00:00:00Z").getUTCDay()};
+
+  return{
+   hi:Math.round(o.hi),
+   lo:Math.round(o.lo),
+   info,
+   dn:new Date(k+"T00:00:00Z").getUTCDay()
+  };
  });
 }
 
 function buildAlert(ts,ci,now){
  let thunder=false,wet=false,gust=0;
+
  for(let i=ci;i<ts.length;i++){
   const e=ts[i],t=Date.parse(e.time);
   if(t>now+12*3600e3)break;
+
   const d=e.data.instant.details;
   const k=kindOf(symOf(e));
+
   if(k==="thunder")thunder=true;
   if(k==="rain"||precipOf(e)>.2)wet=true;
+
   const g=num(d.wind_speed_of_gust),w=num(d.wind_speed);
   const gk=(Number.isFinite(g)?g:(Number.isFinite(w)?w*1.4:0))*3.6;
+
   gust=Math.max(gust,gk);
  }
+
  thunderSoon=thunder;
+
  const parts=[];
  if(thunder)parts.push("⚡ عواصف رعدية وبرق");
  if(wet)parts.push("🌧️ أمطار متوقعة أو هطول");
  if(gust>=65)parts.push(`💨 رياح عاصفة، هبات حتى ${Math.round(gust)} كم/س`);
  else if(gust>=45)parts.push(`💨 رياح قوية، هبات حتى ${Math.round(gust)} كم/س`);
+
  return parts.length?"تنبيه جوي: "+parts.join(" · "):"";
 }
 
 function getJSON(url){
  const ctl=new AbortController();
  const t=setTimeout(()=>ctl.abort(),15000);
+
  return fetch(url,{signal:ctl.signal})
-  .then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json();})
+  .then(r=>{
+   if(!r.ok)throw Error("HTTP "+r.status);
+   return r.json();
+  })
   .finally(()=>clearTimeout(t));
 }
 
@@ -339,7 +471,7 @@ function scheduleRetry(ms){
  retryT=setTimeout(load,ms);
 }
 
-/* متوسط مصدرين إن تقاربت القراءتان، وإلا نعتمد المصدر الرئيسي */
+/* متوسط مصدرين إن تقاربت القراءتان */
 const avg2=(a,b,tol)=>Number.isFinite(b)&&Math.abs(a-b)<=tol?(a+b)/2:a;
 
 async function load(){
@@ -347,7 +479,11 @@ async function load(){
  loading=true;
 
  try{
-  const [rm,rw]=await Promise.allSettled([getJSON(URL_MET),getJSON(URL_WTTR)]);
+  const [rm,rw]=await Promise.allSettled([
+   getJSON(URL_MET),
+   getJSON(URL_WTTR)
+  ]);
+
   if(rm.status!=="fulfilled")throw Error("تعذر جلب بيانات MET Norway");
 
   const ts=rm.value?.properties?.timeseries;
@@ -355,16 +491,29 @@ async function load(){
 
   const now=Date.now();
   let ci=0,best=Infinity;
-  ts.forEach((e,i)=>{const dt=Math.abs(Date.parse(e.time)-now);if(dt<best){best=dt;ci=i;}});
+
+  ts.forEach((e,i)=>{
+   const dt=Math.abs(Date.parse(e.time)-now);
+   if(dt<best){
+    best=dt;
+    ci=i;
+   }
+  });
+
   const cur=ts[ci],d=cur.data.instant.details;
 
-  /* المصدر الثاني (اختياري) */
+  /* المصدر الثاني اختياري */
   let wc=null;
   if(rw.status==="fulfilled")wc=rw.value?.current_condition?.[0]||null;
-  const wT=wc?num(wc.temp_C):NaN,wH=wc?num(wc.humidity):NaN,wCl=wc?num(wc.cloudcover):NaN,wUv=wc?num(wc.uvIndex):NaN;
+
+  const wT=wc?num(wc.temp_C):NaN;
+  const wH=wc?num(wc.humidity):NaN;
+  const wCl=wc?num(wc.cloudcover):NaN;
+  const wUv=wc?num(wc.uvIndex):NaN;
 
   const metT=num(d.air_temperature),metH=num(d.relative_humidity);
   if(!Number.isFinite(metT))throw Error("بيانات الحرارة غير متوفرة");
+
   const t=avg2(metT,wT,4);
   const h=Number.isFinite(metH)?avg2(metH,wH,20):(Number.isFinite(wH)?wH:50);
   const ws=num(d.wind_speed)||0;
@@ -376,13 +525,14 @@ async function load(){
   const kind=kindOf(sym);
   const precip=precipOf(cur);
 
-  /* الحرارة المحسوسة (معادلة Steadman) */
+  /* الحرارة المحسوسة */
   const e=(h/100)*6.105*Math.exp(17.27*t/(237.7+t));
   const feels=t+.33*e-.7*ws-4;
 
-  /* مؤشر UV: سماء صافية مخفَّض حسب الغيوم، ويساوي 0 ليلاً */
+  /* مؤشر UV */
   const uvClear=num(d.ultraviolet_index_clear_sky);
   let uv=Number.isFinite(uvClear)?uvClear*(1-.75*Math.pow(eff/100,3.4)):(Number.isFinite(wUv)?wUv:0);
+
   const st=sunTimes(now);
   if(now<st.sr||now>st.ss)uv=0;
 
@@ -402,17 +552,24 @@ async function load(){
    off:0,
    stale:false
   };
+
   clearTimeout(retryT);
 
  }catch(err){
   console.error("Weather:",err);
+
   if(S&&!S.off){
    S.stale=true;
    scheduleRetry(60000);
   }else{
-   S={off:1,t:0,f:0,w:0,h:0,p:0,uv:0,eff:0,precip:0,kind:"none",daily:[],alert:"",src:"",stale:false};
+   S={
+    off:1,t:0,f:0,w:0,h:0,p:0,uv:0,
+    eff:0,precip:0,kind:"none",
+    daily:[],alert:"",src:"",stale:false
+   };
    scheduleRetry(30000);
   }
+
  }finally{
   loading=false;
   render();
@@ -427,6 +584,7 @@ function liveFx(){
 function render(){
  $("cityName").textContent=CITY;
  $("date").textContent=dateFmt.format(new Date());
+
  const al=$("alert");
 
  if(S.off){
@@ -440,6 +598,7 @@ function render(){
   $("hero").textContent="🌙";
   $("src").textContent="";
   al.hidden=true;
+
  }else{
   $("temp").textContent=S.t+"°C";
   $("feels").textContent="الحرارة المحسوسة: "+S.f+"°C";
@@ -450,37 +609,61 @@ function render(){
 
   $("fcList").innerHTML=S.daily.map(x=>{
    const w=x.info;
-   return `<div class="row r-${w[2]}"><div class="ic">${w[0]}</div><div class="d"><b>${DAYS[x.dn]}</b><span>${w[1]}</span></div><div class="tp"><span class="hi">${x.hi}°</span> / <span class="lo">${x.lo}°</span></div></div>`;
+
+   return `<div class="row r-${w[2]}">
+    <div class="ic">${w[0]}</div>
+    <div class="d">
+     <b>${DAYS[x.dn]}</b>
+     <span>${w[1]}</span>
+    </div>
+    <div class="tp">
+     <span class="hi">${x.hi}°</span> /
+     <span class="lo">${x.lo}°</span>
+    </div>
+   </div>`;
   }).join("");
 
   $("liveTxt").textContent=S.stale?"تعذر التحديث · آخر بيانات محفوظة":"تحديث مباشر الآن";
   $("liveDot").style.background=S.stale?"#f5b02e":"#22e05a";
   $("liveDot").style.boxShadow=S.stale?"none":"0 0 10px #22e05a";
+
   $("src").textContent="📡 المصدر: "+S.src+" · إحداثيات مركز القضاء";
+
   al.textContent=S.alert||"";
   al.hidden=!S.alert;
  }
 
  setFx(liveFx());
+
  if(reduce)draw(performance.now());
 }
 
 function sky(){
  const now=Date.now();
  const t0=sunTimes(now);
+
  if(now>=t0.sr&&now<=t0.ss){
   const f=(now-t0.sr)/(t0.ss-t0.sr);
   return{a:Math.sin(Math.PI*f),day:true,pos:f};
  }
+
  let from,to;
- if(now>t0.ss){from=t0.ss;to=sunTimes(now+864e5).sr;}
- else{from=sunTimes(now-864e5).ss;to=t0.sr;}
+
+ if(now>t0.ss){
+  from=t0.ss;
+  to=sunTimes(now+864e5).sr;
+ }else{
+  from=sunTimes(now-864e5).ss;
+  to=t0.sr;
+ }
+
  const pos=cl01((now-from)/(to-from));
  return{a:-Math.sin(Math.PI*pos),day:false,pos};
 }
 
 const cv=$("fx");
 const cx=cv.getContext("2d");
+
 let W=1,H=1,P=[],CL=[],ST=[],flash=0;
 
 const KS=[
@@ -495,15 +678,18 @@ const KS=[
 function pal(a){
  a=Math.max(-1,Math.min(1,a));
  let i=0;
+
  while(i<KS.length-2&&a>KS[i+1][0])i++;
+
  const k=KS[i],n=KS[i+1],t=(a-k[0])/(n[0]-k[0]);
+
  return[mix(k[1],n[1],t),mix(k[2],n[2],t)];
 }
 
 function cover(){
  if(mode==="dust")return .5;
  if(mode==="rain")return Math.max(.9,S.eff/100);
- if(isClear())return 0; /* سماء صافية = بلا غيوم */
+ if(isClear())return 0;
  return Math.min(1,S.eff/100);
 }
 
@@ -514,54 +700,78 @@ function size(){
 
 function initScene(){
  size();
+
  P=[];
+
  const count={rain:180,dust:110}[mode]||0;
- for(let i=0;i<count;i++)P.push({x:Math.random()*W,y:Math.random()*H,s:Math.random(),r:Math.random()});
+
+ for(let i=0;i<count;i++)
+  P.push({x:Math.random()*W,y:Math.random()*H,s:Math.random(),r:Math.random()});
 
  ST=[];
- for(let i=0;i<100;i++)ST.push({x:Math.random()*W,y:Math.random()*H*.7,s:Math.random(),r:Math.random()*20});
+
+ for(let i=0;i<100;i++)
+  ST.push({x:Math.random()*W,y:Math.random()*H*.7,s:Math.random(),r:Math.random()*20});
 
  CL=[];
+
  for(let i=0;i<Math.round(cover()*10);i++){
   const sc=.6+Math.random()*1.1;
   const pf=[];
+
   for(let j=0;j<9;j++){
    const u=j/8-.5;
+
    pf.push({
     dx:u*190*sc+(Math.random()-.5)*26,
     dy:(Math.random()-.5)*16*sc-(1-Math.abs(u)*2)*20*sc,
     r:(32+Math.random()*28)*sc*(1-Math.abs(u)*.5)
    });
   }
-  CL.push({x:Math.random()*(W+500)-250,y:H*(.05+Math.random()*.5),v:.12+Math.random()*.3,pf});
+
+  CL.push({
+   x:Math.random()*(W+500)-250,
+   y:H*(.05+Math.random()*.5),
+   v:.12+Math.random()*.3,
+   pf
+  });
  }
 }
 
 function setFx(fx){
  mode=fx;
+
  const night=sky().a<0;
 
  if(!S.off){
   const w=currentWx();
+
   let icon=w[0],desc=w[1];
 
-  if(fx==="dust"){icon="🌪️";desc="رياح قوية مع جفاف (احتمال غبار)";}
-  else if(fx==="sunny"){icon=night?"🌙":"☀️";desc=night?"سماء صافية ليلاً":w[1];}
+  if(fx==="dust"){
+   icon="🌪️";
+   desc="رياح قوية مع جفاف (احتمال غبار)";
+  }else if(fx==="sunny"){
+   icon=night?"🌙":"☀️";
+   desc=night?"سماء صافية ليلاً":w[1];
+  }
 
   $("desc").textContent=desc;
-  /* العبارة تظهر فقط عند الصحو والشمس نهاراً، وتختفي مع الغيوم أو الليل أو أي حالة أخرى */
-  $("tag").hidden=!(fx==="sunny"&&!night);
+
+  /* عرض الشمس في حالة الصحو نهاراً */
   if(fx==="sunny"&&!night){
-   if(!$("hero").querySelector(".sun"))$("hero").innerHTML='<div class="sun"></div>';
+   if(!$("hero").querySelector(".sun"))
+    $("hero").innerHTML='<div class="sun"></div>';
   }else{
    $("hero").textContent=icon;
   }
+
  }else{
   $("hero").textContent=night?"🌙":"☀️";
-  $("tag").hidden=true;
  }
 
  const key=fx+Math.round(cover()*5);
+
  if(key!==curKey||!CL.length&&cover()>0){
   curKey=key;
   initScene();
@@ -570,10 +780,12 @@ function setFx(fx){
 
 function draw(t){
  if(!S)return;
+
  const {a,day,pos}=sky();
  const cov=cover();
 
  let[top,bot]=pal(a);
+
  const gray=mode==="rain"?.7:(mode==="cloudy"||mode==="snow")?.45:0;
  const lum=(top[0]+top[1]+top[2])/3;
 
@@ -581,18 +793,22 @@ function draw(t){
   top=mix(top,[lum*.8,lum*.85,lum*.95],gray);
   bot=mix(bot,[lum*1.15,lum*1.2,lum*1.25],gray);
  }
+
  if(mode==="dust"){
   top=mix(top,[150,100,50],.55);
   bot=mix(bot,[220,160,90],.65);
  }
 
  const gr=cx.createLinearGradient(0,0,0,H);
+
  gr.addColorStop(0,rgb(top));
  gr.addColorStop(1,rgb(bot));
+
  cx.fillStyle=gr;
  cx.fillRect(0,0,W,H);
 
  const sa=cl01(-a*3)*(1-cov*.75);
+
  if(sa>0){
   ST.forEach(s=>{
    cx.fillStyle=`rgba(255,255,255,${sa*(.3+.7*Math.abs(Math.sin(t/900+s.r)))})`;
@@ -610,27 +826,36 @@ function draw(t){
  if(day){
   const warm=cl01(1-a*3);
   const c=mix([255,245,205],[255,140,60],warm);
+
   let g=cx.createRadialGradient(px,py,0,px,py,H*.55);
+
   g.addColorStop(0,rgb(c,.55*vis));
   g.addColorStop(.25,rgb(c,.2*vis));
   g.addColorStop(1,rgb(c,0));
+
   cx.fillStyle=g;
   cx.fillRect(0,0,W,H);
 
   g=cx.createRadialGradient(px,py,0,px,py,38);
+
   g.addColorStop(0,rgb([255,255,240],vis));
   g.addColorStop(.7,rgb(c,vis));
   g.addColorStop(1,rgb(c,0));
+
   cx.fillStyle=g;
   cx.beginPath();
   cx.arc(px,py,38,0,Math.PI*2);
   cx.fill();
+
  }else{
   const g=cx.createRadialGradient(px,py,0,px,py,H*.3);
+
   g.addColorStop(0,`rgba(190,205,255,${.3*vis})`);
   g.addColorStop(1,"rgba(190,205,255,0)");
+
   cx.fillStyle=g;
   cx.fillRect(0,0,W,H);
+
   cx.globalAlpha=vis;
   cx.fillStyle="#f1f1e6";
   cx.beginPath();
@@ -640,19 +865,28 @@ function draw(t){
  }
 
  let cc=mix([70,80,120],[255,255,255],cl01((a+.3)/.8));
+
  const tw=cl01(1-Math.abs(a-.05)/.25);
+
  cc=mix(cc,[255,185,150],tw*.6);
+
  if(gray)cc=mix(cc,[110,120,138],gray);
  if(mode==="dust")cc=mix(cc,[215,165,100],.6);
 
  CL.forEach(c=>{
-  if(!reduce){c.x+=c.v;if(c.x>W+260)c.x=-260;}
+  if(!reduce){
+   c.x+=c.v;
+   if(c.x>W+260)c.x=-260;
+  }
+
   c.pf.forEach(q=>{
    const x=c.x+q.dx,y=c.y+q.dy;
    const g=cx.createRadialGradient(x,y,0,x,y,q.r);
+
    g.addColorStop(0,rgb(cc,.5+.35*cov));
    g.addColorStop(.55,rgb(cc,.3+.2*cov));
    g.addColorStop(1,rgb(cc,0));
+
    cx.fillStyle=g;
    cx.beginPath();
    cx.arc(x,y,q.r,0,Math.PI*2);
@@ -663,15 +897,22 @@ function draw(t){
  if(mode==="dust"){
   cx.fillStyle="#c88c462e";
   cx.fillRect(0,0,W,H);
+
   P.forEach(p=>{
    cx.fillStyle=`rgba(210,150,80,${.15+p.s*.3})`;
+
    cx.beginPath();
    cx.ellipse(p.x,p.y,10+p.r*26,1.5+p.r*2.5,0,0,Math.PI*2);
    cx.fill();
+
    if(!reduce){
     p.x-=3+p.s*7;
     p.y+=Math.sin(t/700+p.r*9)*.6;
-    if(p.x<-40){p.x=W+40;p.y=Math.random()*H;}
+
+    if(p.x<-40){
+     p.x=W+40;
+     p.y=Math.random()*H;
+    }
    }
   });
  }
@@ -680,18 +921,26 @@ function draw(t){
   cx.strokeStyle="#bedcff80";
   cx.lineWidth=1.2;
   cx.beginPath();
+
   P.forEach(p=>{
    cx.moveTo(p.x,p.y);
    cx.lineTo(p.x-3,p.y+14+p.s*10);
+
    if(!reduce){
     p.y+=9+p.s*9;
     p.x-=1.2;
-    if(p.y>H){p.y=-20;p.x=Math.random()*W;}
+
+    if(p.y>H){
+     p.y=-20;
+     p.x=Math.random()*W;
+    }
    }
   });
+
   cx.stroke();
 
   if(!reduce&&thunderSoon&&Math.random()<.002)flash=1;
+
   if(flash>0){
    cx.fillStyle=`rgba(255,255,255,${flash*.35})`;
    cx.fillRect(0,0,W,H);
@@ -704,9 +953,12 @@ function loop(t){
  if(S)draw(t);
  raf=requestAnimationFrame(loop);
 }
+
 function startLoop(){
- if(!raf&&!reduce&&onScreen&&!document.hidden)raf=requestAnimationFrame(loop);
+ if(!raf&&!reduce&&onScreen&&!document.hidden)
+  raf=requestAnimationFrame(loop);
 }
+
 function stopLoop(){
  cancelAnimationFrame(raf);
  raf=0;
@@ -721,51 +973,79 @@ if("IntersectionObserver"in window){
 
 document.addEventListener("visibilitychange",()=>{
  if(document.hidden)stopLoop();
- else{startLoop();load();}
+ else{
+  startLoop();
+  load();
+ }
 });
 
 let rsT=0,lastW=innerWidth;
+
 window.addEventListener("resize",()=>{
  clearTimeout(rsT);
+
  rsT=setTimeout(()=>{
-  if(innerWidth!==lastW){lastW=innerWidth;if(S)initScene();else size();}
-  else{size();}
+  if(innerWidth!==lastW){
+   lastW=innerWidth;
+   if(S)initScene();
+   else size();
+  }else{
+   size();
+  }
+
   if(S&&reduce)draw(performance.now());
  },150);
 });
 
 let lastH=0;
+
 function postHeight(){
  if(parent===window)return;
+
  const w=document.querySelector(".wrap");
  const cs=getComputedStyle(document.body);
- const h=Math.ceil(w.getBoundingClientRect().height+parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom));
+
+ const h=Math.ceil(
+  w.getBoundingClientRect().height+
+  parseFloat(cs.paddingTop)+
+  parseFloat(cs.paddingBottom)
+ );
+
  if(Math.abs(h-lastH)>2){
   lastH=h;
   parent.postMessage({wxHeight:h},"*");
  }
 }
-if("ResizeObserver"in window)new ResizeObserver(postHeight).observe(document.querySelector(".wrap"));
+
+if("ResizeObserver"in window)
+ new ResizeObserver(postHeight).observe(document.querySelector(".wrap"));
+
 window.addEventListener("load",postHeight);
 
 $("ref").addEventListener("click",()=>{
  const r=$("ref");
+
  r.classList.add("spin");
+
  setTimeout(()=>r.classList.remove("spin"),600);
+
  load();
 });
 
-/* تسجيل الـ Service Worker (مطلوب لتطبيق PWA) */
+/* تسجيل Service Worker */
 if("serviceWorker"in navigator){
  window.addEventListener("load",()=>{
-  navigator.serviceWorker.register("./sw.js").catch(err=>console.error("SW:",err));
+  navigator.serviceWorker.register("./sw.js")
+   .catch(err=>console.error("SW:",err));
  });
 }
 
 setInterval(load,10*60*1000);
+
 size();
 load();
 startLoop();
+
 </script>
 </body>
 </html>
