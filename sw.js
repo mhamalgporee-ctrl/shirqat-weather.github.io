@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "sharqat-v4";
+const CACHE = "sharqat-v5";
 
 const FILES = [
   "./",
@@ -80,17 +80,14 @@ self.addEventListener("fetch", event => {
   event.respondWith(
     (async () => {
       try {
-        /* الإنترنت أولاً */
-        const response = await fetch(request);
+        /* الإنترنت أولاً، مع تجاوز كاش المتصفح المؤقت (GitHub Pages يحفظ 10 دقائق) */
+        const response = await fetch(request, { cache: "no-cache" });
 
         if (response && response.ok) {
           const cache = await caches.open(CACHE);
 
-          const key = request.mode === "navigate"
-            ? "./index.html"
-            : request;
-
-          await cache.put(key, response.clone());
+          /* كل صفحة تُحفظ باسمها الحقيقي */
+          await cache.put(request, response.clone());
         }
 
         return response;
