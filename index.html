@@ -43,8 +43,8 @@ h1{margin:0;font-size:clamp(.9rem,3vw,1.25rem);font-weight:900;color:#ffe08a;lin
 .alert.severe{border-color:#67c7ff;background:#12486dcc}
 .alert.info{border-color:#67c7ff;background:#12486dcc}
 .dustbox{margin:4px 0;padding:10px 12px;border:1px solid #8bc8e8;border-inline-start:4px solid #8bc8e8;border-radius:8px;background:#12394dcc;font-size:.9rem;line-height:1.7}
-.dustbox.warning{border-color:#8bc8e8;background:#12394dcc}
-.dustbox.severe{border-color:#ff6b6b;background:#5a1f1fcc}
+.dustbox.watch{border-color:#8bc8e8;background:#12394dcc}
+.dustbox.high{border-color:#8bc8e8;background:#12394dcc}
 .dustbox b{display:block;font-size:.95rem;color:#ffe08a}
 .dustbox small{display:block;color:#eaf3ff;font-size:.73rem}
 .cur-main{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0}
@@ -137,7 +137,7 @@ h1{margin:0;font-size:clamp(.9rem,3vw,1.25rem);font-weight:900;color:#ffe08a;lin
    </div>
    <div class="descrow"><div class="desc" id="desc">جارٍ جلب حالة الطقس</div></div>
   </div>
-
+  
   <div>
    <div class="alert" id="alert" role="alert" hidden></div>
    <div class="dustbox" id="dustBox" role="status" hidden></div>
@@ -169,15 +169,6 @@ if(parent===window)document.documentElement.classList.add("standalone");
 const LAT=35.5036,LON=43.2325,TZ="Asia/Baghdad",CITY="الشرقاط";
 const OFF=3*3600,DAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/* ===== حدود تنبيه الغبار (عدّلها حسب الحاجة) ===== */
-const DUST_STRONG=1000;   // ميكروغرام/م³ للغبار الكثيف
-const DUST_SEVERE=2000;   // ميكروغرام/م³ للعاصفة الغبارية
-const GUST_STRONG=35;     // كم/س هبات رياح مصاحبة
-const GUST_SEVERE=45;     // كم/س للعاصفة
-const DUST_LEAD_H=6;      // لا يظهر التنبيه إلا إذا بدأ خلال هذه الساعات
-const DUST_MIN_HOURS=2;   // أقل عدد ساعات متتالية
-
 const URL_MET=`https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${LAT}&lon=${LON}`;
 const URL_WTTR=`https://wttr.in/${LAT},${LON}?format=j1`;
 const URL_DUST=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&current=dust,aerosol_optical_depth,pm10&hourly=dust,aerosol_optical_depth,pm10&domains=cams_global&forecast_days=5&timezone=${encodeURIComponent(TZ)}`;
@@ -309,66 +300,24 @@ function buildAlert(ts,ci,now){
  if(!parts.length)return"";
  return{message:parts.join(" · "),level:"info"};
 }
+function buildDust(data,now){
+ const h=data?.hourly;if(!h||!Array.isArray(h.time)||!Array.isArray(h.dust))throw Error("CAMS dust data missing");
+ const rows=h.time.map((time,i)=>({time:Date.parse(time),dust:num(h.dust[i]),aod:num(h.aerosol_optical_depth?.[i]),pm10:num(h.pm10?.[i])})).filter(x=>Number.isFinite(x.time)&&Number.isFinite(x.dust));
+ if(!rows.length)throw Error("No CAMS dust values");
+ const future=rows.filter(x=>x.time>=now-90*60e3),peak=future.reduce((a,b)=>b.dust>a.dust?b:a,future[0]);
+ if(!future.length)throw Error("No future CAMS dust values");
+ const current=future[0],severe=future.filter(x=>x.dust>=350);
+ 
+ if(!severe.length)return null;
 
-/* تنبيه الغبار: لا يظهر إلا إذا أكدته الرياح الفعلية من MET واستمر ساعتين
-   متتاليتين وكان قريباً زمنياً. الغبار البسيط يُتجاهل تماماً. */
-function buildDust(data,now,ts){
- const h=data?.hourly;
- if(!h||!Array.isArray(h.time)||!Array.isArray(h.dust))throw Error("CAMS dust data missing");
-
- // بدون بيانات رياح موثوقة لا نُصدر تنبيه غبار (تجنباً للإنذار الكاذب)
- if(!Array.isArray(ts)||!ts.length)return null;
-
- const gustAt=t=>{
-  let best=null,bd=Infinity;
-  for(const e of ts){
-   const dt=Math.abs(Date.parse(e.time)-t);
-   if(dt<bd){bd=dt;best=e;}
-  }
-  if(!best||bd>90*60e3)return NaN;
-  const g=num(best.data.instant.details.wind_speed_of_gust);
-  return Number.isFinite(g)?g*3.6:NaN;
- };
-
- const rows=h.time.map((time,i)=>({time:Date.parse(time),dust:num(h.dust[i])}))
-  .filter(x=>Number.isFinite(x.time)&&Number.isFinite(x.dust)&&
-   x.time>=now-60*60e3&&x.time<=now+12*3600e3);
- if(!rows.length)return null;
-
- rows.forEach(r=>{
-  r.gust=gustAt(r.time);
-  r.strong=r.dust>=DUST_STRONG&&r.gust>=GUST_STRONG;
-  r.severe=r.dust>=DUST_SEVERE&&r.gust>=GUST_SEVERE;
- });
-
- // أول فترة متتالية بطول الحد الأدنى
- let run=null;
- for(let i=0;i<rows.length;i++){
-  if(!rows[i].strong)continue;
-  let j=i;
-  while(j+1<rows.length&&rows[j+1].strong)j++;
-  if(j-i+1>=DUST_MIN_HOURS){run=rows.slice(i,j+1);break;}
-  i=j;
- }
- if(!run||run[0].time>now+DUST_LEAD_H*3600e3)return null;
-
- const peak=run.reduce((a,b)=>b.dust>a.dust?b:a,run[0]);
- const severe=run.some(r=>r.severe);
- const when=run[0].time<=now?"الآن":"ابتداءً من "+timeLabel(run[0].time);
-
- return{
-  state:severe?"تنبيه عاصفة غبارية قوية":"احتمال غبار كثيف",
-  level:severe?"severe":"warning",
-  detail:(severe?"يتوقع النموذج عاصفة غبارية مصحوبة برياح قوية ":"يتوقع النموذج ارتفاع الغبار مع نشاط الرياح ")+
-   when+"، وقد يصل الغبار السطحي إلى "+Math.round(peak.dust)+" ميكروغرام/م³ تقريباً.",
-  current:rows[0].dust,peak:peak.dust,peakTime:peak.time
- };
+ let state="تنبيه عاصفة غبارية قوية",detail=`يتوقع النموذج تأثر المنطقة بعاصفة غبارية وارتفاع الغبار السطحي إلى ${Math.round(peak.dust)} ميكروغرام/م³ تقريباً عند ${timeLabel(peak.time)}.`;
+ return{state,level:"",detail,current:current?.dust,peak:peak.dust,peakTime:peak.time,updated:data.current?.time||"غير متوفر",aod:peak.aod,pm10:peak.pm10};
 }
 function renderDust(dust){
  const el=$("dustBox");
  if(!dust){el.hidden=true;return;}
- el.hidden=false;el.className="dustbox "+(dust.level||"");
- el.innerHTML=`<b>🌫️ ${dust.state}</b>${dust.detail}<small>أعلى قيمة غبار متوقعة: ${Math.round(dust.peak)} ميكروغرام/م³ · الوقت: ${timeLabel(dust.peakTime)} · المصدر: CAMS Global عبر Open-Meteo</small>`;
+ el.hidden=false;el.className="dustbox";
+ el.innerHTML=`<b>🌫️ ${dust.state}</b>${dust.detail}<small>غبار سطحي الآن/أقرب فترة: ${Number.isFinite(dust.current)?Math.round(dust.current)+" ميكروغرام/م³":"غير متاح"} · وقت القراءة: ${dust.updated||"غير متوفر"} · المصدر: CAMS Global عبر Open-Meteo</small>`;
 }
 function getJSON(url){
  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),15000);
@@ -379,12 +328,7 @@ async function load(){
  if(loading)return;loading=true;
  try{
   const [rm,rw,rd]=await Promise.allSettled([getJSON(URL_MET),getJSON(URL_WTTR),getJSON(URL_DUST)]);
-  let dust=null;
-  if(rd.status==="fulfilled"){
-   try{
-    dust=buildDust(rd.value,Date.now(),rm.status==="fulfilled"?rm.value?.properties?.timeseries:null);
-   }catch(e){console.warn("CAMS dust:",e);}
-  }
+  let dust=null;if(rd.status==="fulfilled"){try{dust=buildDust(rd.value,Date.now());}catch(e){console.warn("CAMS dust:",e);}}
   if(rm.status!=="fulfilled")throw Error("تعذر جلب بيانات MET Norway");
   const ts=rm.value?.properties?.timeseries;if(!Array.isArray(ts)||ts.length<20)throw Error("بيانات الطقس غير مكتملة");
   const now=Date.now();let ci=0,best=Infinity;
