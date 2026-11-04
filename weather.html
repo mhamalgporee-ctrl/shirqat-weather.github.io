@@ -78,7 +78,7 @@ body{
  background:#12486dcc
 }
 .alert.warning,.alert.severe,.alert.info{border-color:#67c7ff;background:#12486dcc}
-.dustbox{border:1px solid #8bc8e8;background:#12394dcc}
+.dustbox{border:1px solid #e2a03f;background:#3d2b12cc}
 .dustbox b{display:block;color:#ffe08a;font-size:.95rem}
 .dustbox small{display:block;color:#eaf3ff;font-size:.73rem;margin-top:4px}
 .stats-header{
@@ -230,7 +230,7 @@ const URL_MET=
  `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${LAT}&lon=${LON}`;
 
 const URL_DUST=
- `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&current=dust,aerosol_optical_depth,pm10&hourly=dust,aerosol_optical_depth,pm10&domains=cams_global&forecast_days=5&timezone=${encodeURIComponent(TZ)}`;
+ `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&current=dust,pm10&hourly=dust,pm10&domains=cams_global&forecast_days=2&timezone=${encodeURIComponent(TZ)}`;
 
 const num=v=>(v===null||v===undefined||v==="")?NaN:Number(v);
 const finite=Number.isFinite;
@@ -406,7 +406,6 @@ function buildAlert(ts,ci,now){
   const end=start+duration*3600e3;
 
   const g=num(d.wind_speed_of_gust);
-  const w=num(d.wind_speed);
   const gust=finite(g)?g*3.6:NaN;
 
   if(finite(gust))peakGust=Math.max(peakGust,gust);
@@ -459,32 +458,34 @@ function buildAlert(ts,ci,now){
  return{message:parts.join(" · "),level:"info"};
 }
 
-function buildDust(data,now){
+// تعديل وتحسين منطق تنبيهات الغبار لتكون دقيقة ومؤثرة فقط
+function buildDust(data,now,currentWindKmh){
  const h=data?.hourly;
  if(!h||!Array.isArray(h.time)||!Array.isArray(h.dust))
   throw Error("CAMS dust data unavailable");
 
+ // تصفية البيانات للوقت الحالي والـ 6 ساعات القادمة فقط
  const rows=h.time.map((time,i)=>({
   time:Date.parse(time),
-  dust:num(h.dust[i]),
-  pm10:num(h.pm10?.[i])
- })).filter(x=>finite(x.time)&&finite(x.dust)&&x.time>=now-60*60e3);
+  dust:num(h.dust[i])
+ })).filter(x=>finite(x.time)&&finite(x.dust)&&x.time>=now-30*60e3&&x.time<=now+6*3600e3);
 
- if(!rows.length)throw Error("No dust forecast");
+ if(!rows.length)return null;
 
- const future=rows.filter(x=>x.time>=now-60*60e3);
- const peak=future.reduce((a,b)=>b.dust>a.dust?b:a,future[0]);
- const severe=future.filter(x=>x.dust>=350);
+ const currentDust=rows[0]?.dust||0;
+ const peak=rows.reduce((a,b)=>b.dust>a.dust?b:a,rows[0]);
 
- if(!severe.length)return null;
+ // شرط صارم: عدم إظهار التنبيه إلا إذا كان الغبار السطحي يتجاوز 750 μg/m³ مع رياح نشطة
+ const W_LIMIT = 25; // سرعة رياح 25 كم/س فأكثر
+ const DUST_LIMIT = 750; // تركيز غبار مرتفع جداً مؤثر على الرؤية
+
+ if((currentDust<DUST_LIMIT && peak.dust<DUST_LIMIT) || (currentWindKmh && currentWindKmh<W_LIMIT)){
+  return null;
+ }
 
  return{
-  state:"تنبيه عاصفة غبارية قوية",
-  level:"",
-  detail:"يتوقع النموذج تأثر المنطقة بعاصفة غبارية وارتفاع الغبار السطحي إلى "+
-   Math.round(peak.dust)+" ميكروغرام/م³ تقريباً عند "+
-   timeLabel(peak.time)+".",
-  current:rows[0].dust,
+  state:"تنبيه غبار كثيف موجه",
+  detail:`يتوقع تأثر المنطقة بموجة غبارية كثيفة قد تؤثر على الرؤية الأفقية بتركيز يصل إلى ${Math.round(peak.dust)} ميكروغرام/م³ تقريباً عند ${timeLabel(peak.time)}.`,
   peak:peak.dust,
   peakTime:peak.time
  };
@@ -495,6 +496,7 @@ function renderDust(d){
 
  if(!d){
   el.hidden=true;
+  el.innerHTML="";
   return;
  }
 
@@ -502,7 +504,7 @@ function renderDust(d){
  el.className="dustbox";
  el.innerHTML=
   `<b>🌫️ ${d.state}</b>${d.detail}`+
-  `<small>أعلى قيمة غبار متوقعة: ${Math.round(d.peak)} ميكروغرام/م³`+
+  `<small>أعلى قيمة متوقعة: ${Math.round(d.peak)} ميكروغرام/م³`+
   ` · الوقت: ${timeLabel(d.peakTime)}</small>`;
 }
 
@@ -539,17 +541,6 @@ async function fetchWeather(){
    getJSON(URL_DUST)
   ]);
 
-  if(results[1].status==="fulfilled"){
-   try{
-    renderDust(buildDust(results[1].value,Date.now()));
-   }catch(err){
-    console.warn("Dust:",err);
-    renderDust(null);
-   }
-  }else{
-   renderDust(null);
-  }
-
   if(results[0].status!=="fulfilled"){
    throw Error("تعذر جلب توقعات الطقس");
   }
@@ -582,6 +573,18 @@ async function fetchWeather(){
   const hum=finite(humidity)?Math.round(humidity):null;
   const windKmh=finite(wind)?Math.round(wind*3.6):null;
   const press=finite(pressure)?Math.round(pressure):null;
+
+  // جلب ومعالجة الغبار بربطه بسلاسة مع سرعة الرياح
+  if(results[1].status==="fulfilled"){
+   try{
+    renderDust(buildDust(results[1].value,now,windKmh));
+   }catch(err){
+    console.warn("Dust:",err);
+    renderDust(null);
+   }
+  }else{
+   renderDust(null);
+  }
 
   const eff=effOf(d);
 
