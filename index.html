@@ -228,13 +228,17 @@ function cloudWx(e,daily){
  return["☁️","غائم","cloudy"];
 }
 function isClear(){return S.kind==="none"&&S.precip<.2&&S.eff<=20;}
+
+// تعديل دقة الطقس الحالي لمنع ظهور المطر وهمياً وربطه بالواقع في مركز الشرقاط
 function currentWx(){
  if(S.kind==="thunder")return["⛈️","احتمال عواصف رعدية خلال الساعة","rain"];
  if(S.kind==="snow")return["❄️","ثلوج","snow"];
- if(S.kind==="rain"||S.precip>=.2)return["🌧️",S.precip>=1?"أمطار متوقعة":"احتمال زخات مطر","rain"];
+ if((S.kind==="rain"||S.precip>=0.8)&&S.eff>=60)return["🌧️",S.precip>=1.5?"أمطار متوقعة":"احتمال زخات مطر خفيفة","rain"];
+ if(S.precip>=0.3)return["🌦️","غائم جزئياً","partly"];
  if(S.kind==="fog")return["🌫️","ضباب","cloudy"];
  return cloudWx(S.eff,false);
 }
+
 const uvTxt=u=>u<3?"منخفض":u<6?"معتدل":u<8?"مرتفع":u<11?"مرتفع جداً":"شديد";
 const dayKey=ms=>new Date(ms+OFF*1000).toISOString().slice(0,10);
 function buildDaily(ts,now){
@@ -277,11 +281,11 @@ function buildAlert(ts,ci,now){
   const gust=(Number.isFinite(g)?g:(Number.isFinite(w)?w*1.4:0))*3.6;
   peakGust=Math.max(peakGust,gust);
   if(k==="thunder"&&!firstThunder)firstThunder={start,end};
-  if((k==="rain"||pr.mm>=.2)&&!firstRain)firstRain={start,end};
+  if((k==="rain"||pr.mm>=.5)&&!firstRain)firstRain={start,end};
   if(pr.mm>=7.5&&duration<=3)heavy=true;
   if(pr.mm>=10&&duration<=6)heavy=true;
   if(pr.mm>0)totalRain+=pr.mm;
-  if(k==="thunder"||k==="rain"||pr.mm>=.2)events.push({start,end,k,mm:pr.mm,hours:duration});
+  if(k==="thunder"||k==="rain"||pr.mm>=.5)events.push({start,end,k,mm:pr.mm,hours:duration});
  }
  thunderSoon=!!firstThunder&&firstThunder.start<=now+60*60e3;
  const parts=[];
@@ -301,11 +305,10 @@ function buildAlert(ts,ci,now){
  return{message:parts.join(" · "),level:"info"};
 }
 
-// تعديل وتحسين منطق تنبيهات الغبار لتكون دقيقة وصارمة وتختفي تلقائياً بانتهاء وقتها
+// تنبيهات الغبار الصارمة
 function buildDust(data,now,currentWindKmh){
  const h=data?.hourly;if(!h||!Array.isArray(h.time)||!Array.isArray(h.dust))throw Error("CAMS dust data missing");
  
- // تصفية البيانات للوقت الحالي والـ 6 ساعات القادمة فقط لضمان اختفاء التنبيه تلقائياً بعد مرور وقته
  const rows=h.time.map((time,i)=>({time:Date.parse(time),dust:num(h.dust[i]),aod:num(h.aerosol_optical_depth?.[i]),pm10:num(h.pm10?.[i])})).filter(x=>Number.isFinite(x.time)&&Number.isFinite(x.dust)&&x.time>=now-30*60e3&&x.time<=now+6*3600e3);
  
  if(!rows.length)return null;
@@ -313,7 +316,6 @@ function buildDust(data,now,currentWindKmh){
  const currentDust=rows[0]?.dust||0;
  const peak=rows.reduce((a,b)=>b.dust>a.dust?b:a,rows[0]);
 
- // شروط صارمة: عدم إظهار التنبيه إلا إذا كان الغبار السطحي يتجاوز 750 ميكروغرام/م³ والرياح نشطة (أكثر من 25 كم/س)
  const W_LIMIT = 25;
  const DUST_LIMIT = 750;
 
