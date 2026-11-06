@@ -149,6 +149,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
   gap: 8px;
   padding: 8px 14px 14px;
 }
+.metrics.solo { padding: 0; }
+.metrics.solo .metric { background: var(--card); box-shadow: var(--shadow); }
 .metric {
   background: var(--soft);
   border: 1px solid var(--border);
@@ -160,6 +162,16 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
 .metric b { display: block; font-size: 0.95rem; direction: ltr; margin-top: 2px; font-weight: 700; }
 .metric span { color: var(--mut); font-weight: 600; }
 
+.mapCard {
+  background: var(--card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  padding-top: 12px;
+}
 .mapTabs {
   display: flex;
   gap: 8px;
@@ -422,33 +434,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
   </div>
  </div>
 
- <div class="metrics">
-  <div class="metric"><span>الرطوبة</span><b id="hum">--%</b></div>
-  <div class="metric"><span>الرياح</span><b id="wind">--</b></div>
-  <div class="metric"><span>الضغط</span><b id="pressure">--</b></div>
- </div>
-
- <div class="mapTabs" id="mapTabs">
-  <button type="button" data-map="clouds" class="on">☁️ حركة الغيوم</button>
-  <button type="button" data-map="satellite">🛰️ قمر صناعي</button>
- </div>
-
- <div class="scene">
-  <iframe
-   id="satelliteFrame"
-   title="صور الأقمار الصناعية والغيوم فوق الشرقاط"
-   src="https://embed.windy.com/embed2.html?lat=35.5036&lon=43.2325&detailLat=35.5036&detailLon=43.2325&width=760&height=320&zoom=7&level=surface&overlay=clouds&product=ecmwf&menu=&message=true&marker=true&calendar=24&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default"
-   allowfullscreen>
-  </iframe>
-  <span class="sceneLabel" id="sceneLabel">حركة الغيوم · الشرقاط</span>
-  <span class="satNote">اضغط ▶ لتشغيل الحركة · Windy</span>
- </div>
 </section>
 
-<div class="sectionTitle">⏰ توقعات ساعات اليوم المختار</div>
-<div class="hs" id="hs"></div>
-
-<div class="box" id="rainNow"></div>
 <div class="box" id="alert" hidden></div>
 <div class="box dust" id="dustBox" hidden></div>
 
@@ -463,6 +450,37 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
 
 <div class="sectionTitle">📊 تفاصيل اليوم المختار</div>
 <div class="rows" id="rows"></div>
+
+<div class="metrics solo">
+ <div class="metric"><span>الرطوبة</span><b id="hum">--%</b></div>
+ <div class="metric"><span>الرياح</span><b id="wind">--</b></div>
+ <div class="metric"><span>الضغط</span><b id="pressure">--</b></div>
+</div>
+
+<div class="sectionTitle">⏰ توقعات ساعات اليوم المختار</div>
+<div class="hs" id="hs"></div>
+
+<div class="box" id="rainNow"></div>
+
+<div class="sectionTitle">🛰️ خريطة الغيوم والأقمار الصناعية</div>
+<section class="mapCard">
+ <div class="mapTabs" id="mapTabs">
+  <button type="button" data-map="clouds" class="on">☁️ حركة الغيوم</button>
+  <button type="button" data-map="satellite">🛰️ قمر صناعي</button>
+ </div>
+
+ <div class="scene">
+  <iframe
+   id="satelliteFrame"
+   title="صور الأقمار الصناعية والغيوم فوق الشرقاط"
+   src="https://embed.windy.com/embed2.html?lat=35.5036&lon=43.2325&detailLat=35.5036&detailLon=43.2325&width=760&height=320&zoom=7&level=surface&overlay=clouds&product=ecmwf&menu=&message=true&marker=true&calendar=24&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default"
+   loading="lazy"
+   allowfullscreen>
+  </iframe>
+  <span class="sceneLabel" id="sceneLabel">حركة الغيوم · الشرقاط</span>
+  <span class="satNote">اضغط ▶ لتشغيل الحركة · Windy</span>
+ </div>
+</section>
 
 <div class="foot">
  <div class="p">مرحباً بكم في موقع الشرقاط الثقافي</div>
