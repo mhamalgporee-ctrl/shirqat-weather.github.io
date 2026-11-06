@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -30,48 +29,52 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{
-margin:0;padding:9px 10px 15px;background:var(--bg);
-color:var(--ink);font:15px/1.6 Tahoma,Arial,sans-serif
+margin:0;padding:8px 8px 12px;background:var(--bg);
+color:var(--ink);font:14px/1.5 Tahoma,Arial,sans-serif
 }
 button{font:inherit;color:inherit;cursor:pointer}
-.wrap{max-width:760px;margin:auto;display:grid;gap:10px}
-.hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.hd h1{margin:0;font-size:1.2rem;font-weight:900}
-.sub{font-size:.76rem;color:var(--mut)}
-.hr{display:flex;align-items:center;gap:8px}
-#clk{border:1px solid var(--gold);border-radius:10px;padding:3px 9px;font-weight:bold;direction:ltr}
-#ref{width:36px;height:36px;border:0;border-radius:50%;background:var(--card);font-size:23px}
+.wrap{max-width:720px;margin:auto;display:grid;gap:8px}
+
+.hd{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.hd h1{margin:0;font-size:1.15rem;font-weight:900}
+.sub{font-size:.72rem;color:var(--mut)}
+.hr{display:flex;align-items:center;gap:6px}
+#clk{border:1px solid var(--gold);border-radius:8px;padding:2px 8px;font-weight:bold;font-size:.85rem;direction:ltr}
+#ref{width:32px;height:32px;border:0;border-radius:50%;background:var(--card);font-size:18px;display:grid;place-items:center}
 #ref.spin{animation:spin .7s}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.now{background:var(--card);border-radius:24px;overflow:hidden}
-.nt{padding:14px 17px 7px}
-.lbl{font-weight:bold;display:flex;align-items:center;gap:9px}
-.live{font-size:.72rem;color:var(--mut);font-weight:normal}
-.live:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-left:5px}
+.now{background:var(--card);border-radius:18px;overflow:hidden}
+.nt{padding:10px 14px 4px}
+.lbl{font-weight:bold;display:flex;align-items:center;gap:8px;font-size:.85rem}
+.live{font-size:.7rem;color:var(--mut);font-weight:normal}
+.live:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-left:4px}
 .live.off:before{background:#f59e0b}
-.nm{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.tmp{display:flex;align-items:center;gap:8px}
-.tmp b{font-size:clamp(3.5rem,15vw,4.7rem);line-height:1;direction:ltr}
-.cd{font-weight:bold;font-size:1rem}
-.cd small{display:block;color:var(--mut);font-size:.77rem;font-weight:normal}
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:7px 12px 12px}
-.metric{background:var(--bg);border-radius:12px;padding:7px;text-align:center;font-size:.78rem}
-.metric b{display:block;font-size:1rem;direction:ltr}
-.metric span{color:var(--mut)}
-.hs{display:flex;gap:5px;overflow-x:auto;padding:8px 12px;scrollbar-width:none}
-.hs::-webkit-scrollbar,.days::-webkit-scrollbar{display:none}
-.h{flex:0 0 62px;display:grid;justify-items:center;gap:2px;font-size:.75rem}
-.h b{font-size:1rem;direction:ltr}
-.h small{color:#2788db;min-height:17px}
+.nm{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tmp{display:flex;align-items:center;gap:6px}
+.tmp b{font-size:clamp(2.8rem,11vw,3.8rem);line-height:1;direction:ltr}
+.cd{font-weight:bold;font-size:.92rem}
+.cd small{display:block;color:var(--mut);font-size:.74rem;font-weight:normal}
 
-/* مشهد الأقمار الصناعية */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:6px 10px 8px}
+.metric{background:var(--bg);border-radius:10px;padding:5px;text-align:center;font-size:.74rem}
+.metric b{display:block;font-size:.9rem;direction:ltr}
+.metric span{color:var(--mut)}
+
+.hs{display:flex;gap:4px;overflow-x:auto;padding:6px 10px;scrollbar-width:none}
+.hs::-webkit-scrollbar,.days::-webkit-scrollbar{display:none}
+.h{flex:0 0 54px;display:grid;justify-items:center;gap:1px;font-size:.72rem}
+.h b{font-size:.9rem;direction:ltr}
+.h small{color:#2788db;min-height:15px}
+
+/* مشهد الأقمار الصناعية الخريطة المعدلة */
 .scene{
-height:230px;
+height:340px;
 position:relative;
 overflow:hidden;
 background:#172b40;
-border-radius:0 0 18px 18px;
+border-radius:0 0 16px 16px;
+margin-top:4px;
 }
 #satelliteFrame{
 position:absolute;
@@ -82,59 +85,64 @@ border:0;
 }
 .sceneLabel{
 position:absolute;
-bottom:7px;
-right:12px;
+bottom:6px;
+right:8px;
 z-index:2;
 color:white;
-font-size:.7rem;
-background:#0009;
-padding:3px 9px;
-border-radius:8px;
+font-size:.68rem;
+background:rgba(0,0,0,0.65);
+padding:2px 8px;
+border-radius:6px;
 pointer-events:none;
 }
 .satNote{
-font-size:.68rem;
+font-size:.66rem;
 color:#fff;
-background:#0009;
+background:rgba(0,0,0,0.65);
 position:absolute;
 left:8px;
-bottom:7px;
-padding:3px 7px;
-border-radius:7px;
+bottom:6px;
+padding:2px 7px;
+border-radius:6px;
 z-index:2;
 pointer-events:none;
 }
 
-.box{padding:11px 13px;border-radius:13px;border-right:4px solid #2788db;background:var(--info);font-size:.88rem;line-height:1.9;font-weight:bold}
+.box{padding:8px 11px;border-radius:10px;border-right:4px solid #2788db;background:var(--info);font-size:.82rem;line-height:1.6;font-weight:bold}
 .box.dust{border-color:#df9c36;background:var(--dust)}
-.box small{display:block;color:var(--mut);font-size:.7rem;font-weight:normal}
-.trend{display:flex;align-items:center;gap:12px;background:var(--card);padding:11px 14px;border-radius:16px}
-.trend span{font-size:1.5rem}
-.days{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
-.d{flex:0 0 86px;border:2px solid transparent;border-radius:16px;background:var(--card);padding:8px 4px;display:grid;justify-items:center;gap:3px;font-size:.78rem}
+.box small{display:block;color:var(--mut);font-size:.68rem;font-weight:normal}
+
+.trend{display:flex;align-items:center;gap:8px;background:var(--card);padding:8px 12px;border-radius:12px;font-size:.82rem}
+.trend span{font-size:1.2rem}
+
+.days{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none}
+.d{flex:0 0 76px;border:2px solid transparent;border-radius:12px;background:var(--card);padding:6px 3px;display:grid;justify-items:center;gap:2px;font-size:.74rem}
 .d.on{border-color:var(--gold)}
-.d b{font-size:.83rem}
-.d em{font-style:normal;direction:ltr}
-.d s{text-decoration:none;color:var(--mut)}
-.sectionTitle{font-weight:900;margin:5px 2px 0}
+.d b{font-size:.8rem}
+.d em{font-style:normal;direction:ltr;font-weight:bold}
+.d s{text-decoration:none;color:var(--mut);font-weight:normal}
+
+.sectionTitle{font-weight:900;font-size:.9rem;margin:4px 2px 0}
 .rows{border-top:1px solid var(--line)}
 .row{border-bottom:1px solid var(--line)}
-.row summary{list-style:none;display:flex;align-items:center;gap:11px;padding:10px 4px;cursor:pointer}
+.row summary{list-style:none;display:flex;align-items:center;gap:8px;padding:7px 2px;cursor:pointer;font-size:.84rem}
 .row summary::-webkit-details-marker{display:none}
-.ri{width:43px;height:43px;border-radius:13px;background:var(--card);display:grid;place-items:center;font-size:1.3rem}
+.ri{width:34px;height:34px;border-radius:10px;background:var(--card);display:grid;place-items:center;font-size:1.1rem}
 .rl{flex:1}
-.rl i{font-style:normal;color:var(--mut);margin:0 4px}
-.ch{color:var(--mut)}
+.rl i{font-style:normal;color:var(--mut);margin:0 3px}
+.ch{color:var(--mut);font-size:.8rem}
 .row[open] .ch{transform:rotate(180deg)}
-.rd{padding:0 57px 12px 4px;font-size:.85rem;color:var(--mut);line-height:1.9}
-.foot{text-align:center;border-top:1px solid var(--line);padding-top:9px;display:grid;gap:4px}
-.foot .p{font-weight:bold;font-size:.87rem}
-.foot .by{font-family:"Aref Ruqaa",Tahoma,serif;color:var(--gold);font-size:1.2rem}
-.foot a.go{justify-self:center;background:var(--gold);color:#2b1c0c;padding:5px 17px;border-radius:30px;text-decoration:none;font-weight:bold}
-.foot small{font-size:.7rem;color:var(--mut)}
-.conf{font-size:.77rem;color:var(--mut);padding:7px 10px;background:var(--card);border-radius:10px}
+.rd{padding:0 44px 8px 4px;font-size:.8rem;color:var(--mut);line-height:1.6}
+
+.foot{text-align:center;border-top:1px solid var(--line);padding-top:8px;display:grid;gap:3px}
+.foot .p{font-weight:bold;font-size:.82rem}
+.foot .by{font-family:"Aref Ruqaa",Tahoma,serif;color:var(--gold);font-size:1.1rem}
+.foot a.go{justify-self:center;background:var(--gold);color:#2b1c0c;padding:4px 14px;border-radius:20px;text-decoration:none;font-weight:bold;font-size:.8rem}
+.foot small{font-size:.68rem;color:var(--mut)}
+.conf{font-size:.74rem;color:var(--mut);padding:5px 8px;background:var(--card);border-radius:8px}
+
 @media(max-width:420px){
-.scene{height:205px}
+.scene{height:280px}
 }
 @media(prefers-reduced-motion:reduce){
 *{animation:none!important;transition:none!important}
@@ -183,7 +191,7 @@ pointer-events:none;
   <iframe
    id="satelliteFrame"
    title="صور الأقمار الصناعية والغيوم فوق الشرقاط"
-   src="https://embed.windy.com/embed2.html?lat=35.5036&lon=43.2325&detailLat=35.5036&detailLon=43.2325&width=760&height=300&zoom=6&level=surface&overlay=satellite&product=satellite&menu=&message=true&marker=true&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default"
+   src="https://embed.windy.com/embed2.html?lat=35.5036&lon=43.2325&detailLat=35.5036&detailLon=43.2325&width=760&height=340&zoom=7&level=surface&overlay=satellite&product=satellite&menu=&message=true&marker=true&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default"
    loading="lazy"
    allowfullscreen>
   </iframe>
@@ -267,7 +275,6 @@ function timeLabel(sec){
  return fmtTime.format(new Date(sec*1000));
 }
 
-/* وصف الطقس */
 function weather(code){
  code=Number(code);
  if(code===0)return["clear","سماء صافية"];
@@ -291,7 +298,7 @@ function weather(code){
  return["cloud","حالة جوية متغيرة"];
 }
 
-function icon(k,night,size=36){
+function icon(k,night,size=30){
  const sun=`<circle cx="28" cy="25" r="10" fill="#ffc43b"/>
  <g stroke="#ffc43b" stroke-width="3" stroke-linecap="round">
  <path d="M28 4v5M28 41v5M7 25h5M44 25h5M13 10l4 4M39 36l4 4M43 10l-4 4M17 36l-4 4"/></g>`;
@@ -310,7 +317,6 @@ function icon(k,night,size=36){
  return `<svg viewBox="0 0 56 60" width="${size}" height="${size*60/56}">${body}</svg>`;
 }
 
-/* روابط البيانات */
 const WEATHER_URL=
 "https://api.open-meteo.com/v1/forecast?"+
 "latitude="+LAT+
@@ -340,7 +346,6 @@ async function getJSON(url){
  }finally{clearTimeout(timer)}
 }
 
-/* بناء بيانات الأيام */
 function dailyData(data){
  const d=data.daily;
  return d.time.map((t,i)=>{
@@ -394,7 +399,6 @@ function hourlyDay(day,now){
  return result;
 }
 
-/* التنبيهات */
 function rainAlert(hours){
  const wet=hours.filter(x=>
   (x.prob>=55&&x.rain>=0.1)||(x.rain>=0.5)
@@ -431,7 +435,6 @@ function makeAlerts(hours){
  return alerts.join(" ");
 }
 
-/* الغبار */
 function dustInfo(data,now){
  const h=data?.hourly;
  if(!h||!Array.isArray(h.dust))return null;
@@ -463,7 +466,6 @@ function renderDust(d){
  ".<small>المصدر: CAMS عبر Open-Meteo. هذه بيانات نموذجية وليست قياساً محلياً للرؤية.</small>";
 }
 
-/* تقييم الثقة */
 function confidenceText(hours){
  const next=hours.slice(0,24);
  if(next.length<12)return"بيانات محدودة؛ الثقة غير كافية للتقييم.";
@@ -478,7 +480,6 @@ function confidenceText(hours){
  return"ثقة متوسطة؛ توجد احتمالات مطر متفرقة وتحتاج إلى متابعة.";
 }
 
-/* تحميل البيانات */
 async function load(){
  if(loading)return;
  loading=true;
@@ -557,7 +558,6 @@ async function load(){
  }
 }
 
-/* تفاصيل الصفوف */
 function row(ico,label,value,detail){
  return `<details class="row">
  <summary><span class="ri">${ico}</span>
@@ -582,14 +582,13 @@ function uvText(v){
  return"شديد";
 }
 
-/* عرض البيانات */
 function render(){
  if(!S)return;
  const c=S.current;
  const w=weather(c.code);
  const night=c.isDay===0;
 
- $("ico").innerHTML=icon(w[0],night,58);
+ $("ico").innerHTML=icon(w[0],night,48);
  $("temp").textContent=Math.round(c.temp)+"°";
  $("desc").textContent=w[1];
  $("feels").textContent="الحرارة المحسوسة: "+Math.round(c.feels)+"°";
@@ -623,7 +622,7 @@ function renderDays(){
  $("days").innerHTML=S.days.map((d,i)=>{
   const dn=i===0?"اليوم":DAYS[new Date(d.time*1000).getDay()];
   return `<button class="d${i===SEL?" on":""}" data-i="${i}" type="button">
-  <b>${dn}</b>${icon(d.k,false,32)}
+  <b>${dn}</b>${icon(d.k,false,26)}
   <span>${d.txt}</span>
   <em>${Math.round(d.hi)}° / <s>${Math.round(d.lo)}°</s></em>
   <small>${finite(d.prob)?Math.round(d.prob)+"% مطر":"--"}</small>
@@ -646,7 +645,7 @@ function renderSelected(){
 
   return `<div class="h">
   <b>${Math.round(x.temp)}°</b>
-  ${icon(w[0],night,31)}
+  ${icon(w[0],night,26)}
   <small>${finite(x.prob)&&x.prob>=20?"💧"+Math.round(x.prob)+"%":""}</small>
   <span>${i===0&&SEL===0?"الآن":fmtHour.format(new Date(x.time*1000))}</span>
   </div>`;
@@ -705,7 +704,6 @@ function renderSelected(){
  "أعلى قيمة CAPE في التوقعات الساعية. ارتفاعها قد يشير إلى قابلية الحمل الحراري، لكنه لا يؤكد حدوث العواصف.");
 }
 
-/* الأحداث */
 $("days").addEventListener("click",e=>{
  const b=e.target.closest(".d");
  if(!b)return;
@@ -721,21 +719,14 @@ $("ref").addEventListener("click",()=>{
  load();
 });
 
-/* إعادة التحميل عند العودة للصفحة */
 document.addEventListener("visibilitychange",()=>{
  if(!document.hidden)load();
 });
 
-/* تشغيل وتحديث */
 load();
-
-/* تحديث الطقس كل 20 دقيقة */
 setInterval(load,20*60*1000);
-
-/* إعادة المحاولة عند عودة الإنترنت */
 window.addEventListener("online",load);
 
-/* ارتفاع الصفحة داخل الإطار */
 if("ResizeObserver"in window){
  new ResizeObserver(()=>{
   if(parent!==window){
@@ -746,7 +737,6 @@ if("ResizeObserver"in window){
  }).observe($("wrap"));
 }
 
-/* تسجيل Service Worker إذا كان موجوداً */
 if("serviceWorker"in navigator){
  window.addEventListener("load",()=>{
   navigator.serviceWorker.register("./sw.js")
