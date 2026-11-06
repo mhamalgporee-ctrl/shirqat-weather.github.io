@@ -6,11 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d2137">
 <meta name="description" content="طقس الشرقاط المباشر والتوقعات الجوية والتنبيهات">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="طقس الشرقاط">
 <title>طقس الشرقاط المباشر</title>
+
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -25,8 +22,10 @@
 --dust:#fff0d9;--blue:#2788db;
 }
 @media(prefers-color-scheme:dark){
-:root{--bg:#121824;--card:#1b2636;--ink:#f5f7fb;
---mut:#aebbd0;--line:#303d51;--info:#143a57;--dust:#48351b}
+:root{
+--bg:#121824;--card:#1b2636;--ink:#f5f7fb;
+--mut:#aebbd0;--line:#303d51;--info:#143a57;--dust:#48351b
+}
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -65,9 +64,46 @@ button{font:inherit;color:inherit;cursor:pointer}
 .h{flex:0 0 62px;display:grid;justify-items:center;gap:2px;font-size:.75rem}
 .h b{font-size:1rem;direction:ltr}
 .h small{color:#2788db;min-height:17px}
-.scene{height:170px;position:relative;overflow:hidden}
-#fx{position:absolute;inset:0;width:100%;height:100%;display:block}
-.sceneLabel{position:absolute;bottom:7px;right:12px;color:white;font-size:.7rem;text-shadow:0 1px 3px #000}
+
+/* مشهد الأقمار الصناعية */
+.scene{
+height:230px;
+position:relative;
+overflow:hidden;
+background:#172b40;
+border-radius:0 0 18px 18px;
+}
+#satelliteFrame{
+position:absolute;
+inset:0;
+width:100%;
+height:100%;
+border:0;
+}
+.sceneLabel{
+position:absolute;
+bottom:7px;
+right:12px;
+z-index:2;
+color:white;
+font-size:.7rem;
+background:#0009;
+padding:3px 9px;
+border-radius:8px;
+pointer-events:none;
+}
+.satNote{
+font-size:.68rem;
+color:#fff;
+background:#0009;
+position:absolute;
+left:8px;
+bottom:7px;
+padding:3px 7px;
+border-radius:7px;
+z-index:2;
+pointer-events:none;
+}
 
 .box{padding:11px 13px;border-radius:13px;border-right:4px solid #2788db;background:var(--info);font-size:.88rem;line-height:1.9;font-weight:bold}
 .box.dust{border-color:#df9c36;background:var(--dust)}
@@ -97,7 +133,12 @@ button{font:inherit;color:inherit;cursor:pointer}
 .foot a.go{justify-self:center;background:var(--gold);color:#2b1c0c;padding:5px 17px;border-radius:30px;text-decoration:none;font-weight:bold}
 .foot small{font-size:.7rem;color:var(--mut)}
 .conf{font-size:.77rem;color:var(--mut);padding:7px 10px;background:var(--card);border-radius:10px}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:420px){
+.scene{height:205px}
+}
+@media(prefers-reduced-motion:reduce){
+*{animation:none!important;transition:none!important}
+}
 </style>
 </head>
 
@@ -137,18 +178,24 @@ button{font:inherit;color:inherit;cursor:pointer}
  </div>
 
  <div class="hs" id="hs"></div>
+
  <div class="scene">
-  <canvas id="fx" aria-hidden="true"></canvas>
-  <span class="sceneLabel" id="sceneLabel">مشهد جوي متحرك</span>
+  <iframe
+   id="satelliteFrame"
+   title="صور الأقمار الصناعية والغيوم فوق الشرقاط"
+   src="https://embed.windy.com/embed2.html?lat=35.5036&lon=43.2325&detailLat=35.5036&detailLon=43.2325&width=760&height=300&zoom=6&level=surface&overlay=satellite&product=satellite&menu=&message=true&marker=true&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default"
+   loading="lazy"
+   allowfullscreen>
+  </iframe>
+  <span class="sceneLabel">صور الأقمار الصناعية · الشرقاط</span>
+  <span class="satNote">المشهد الفضائي حسب آخر رصد متاح</span>
  </div>
 </section>
 
 <div class="box" id="alert" hidden></div>
 <div class="box dust" id="dustBox" hidden></div>
 
-<div class="conf" id="confidence">
-  مستوى الثقة بالتوقعات: جارٍ التحليل
-</div>
+<div class="conf" id="confidence">مستوى الثقة بالتوقعات: جارٍ التحليل</div>
 
 <div class="trend" id="trend" hidden>
  <span id="tra"></span><div id="trt"></div>
@@ -181,7 +228,6 @@ const LON=43.2325;
 const TZ="Asia/Baghdad";
 
 const DAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
-const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const finite=Number.isFinite;
 const num=v=>v===null||v===undefined||v===""?NaN:Number(v);
 
@@ -202,15 +248,6 @@ let S=null;
 let SEL=0;
 let loading=false;
 let retryTimer=0;
-let refreshTimer=0;
-let lastScene="";
-let onScreen=true;
-let raf=0;
-let W=300,H=170;
-let clouds=[],particles=[],stars=[];
-let flash=0;
-
-/* ---------------- الوقت ---------------- */
 
 function tick(){
  const now=new Date();
@@ -223,16 +260,14 @@ function tick(){
 tick();
 setInterval(tick,1000);
 
-function localDay(ms){
- const d=new Date(ms*1000);
- return d.toLocaleDateString("en-CA",{timeZone:TZ});
+function localDay(sec){
+ return new Date(sec*1000).toLocaleDateString("en-CA",{timeZone:TZ});
 }
 function timeLabel(sec){
  return fmtTime.format(new Date(sec*1000));
 }
 
-/* ---------------- وصف الطقس ---------------- */
-
+/* وصف الطقس */
 function weather(code){
  code=Number(code);
  if(code===0)return["clear","سماء صافية"];
@@ -275,8 +310,7 @@ function icon(k,night,size=36){
  return `<svg viewBox="0 0 56 60" width="${size}" height="${size*60/56}">${body}</svg>`;
 }
 
-/* ---------------- API ---------------- */
-
+/* روابط البيانات */
 const WEATHER_URL=
 "https://api.open-meteo.com/v1/forecast?"+
 "latitude="+LAT+
@@ -306,17 +340,7 @@ async function getJSON(url){
  }finally{clearTimeout(timer)}
 }
 
-/* ---------------- بناء البيانات ---------------- */
-
-function getIndex(times,now){
- let best=0,dist=Infinity;
- times.forEach((t,i)=>{
-  const d=Math.abs(Number(t)-now);
-  if(d<dist){dist=d;best=i}
- });
- return best;
-}
-
+/* بناء بيانات الأيام */
 function dailyData(data){
  const d=data.daily;
  return d.time.map((t,i)=>{
@@ -325,14 +349,11 @@ function dailyData(data){
   return{
    time:Number(t),
    key:localDay(Number(t)),
-   dn:new Date(Number(t)*1000).toLocaleDateString("en-US",{timeZone:TZ,weekday:"long"}),
    hi:num(d.temperature_2m_max[i]),
    lo:num(d.temperature_2m_min[i]),
    appHi:num(d.apparent_temperature_max[i]),
    appLo:num(d.apparent_temperature_min[i]),
-   code,
-   k:w[0],
-   txt:w[1],
+   code,k:w[0],txt:w[1],
    rain:num(d.precipitation_sum[i]),
    prob:num(d.precipitation_probability_max[i]),
    wind:num(d.wind_speed_10m_max[i]),
@@ -373,8 +394,7 @@ function hourlyDay(day,now){
  return result;
 }
 
-/* ---------------- المطر والتنبيهات ---------------- */
-
+/* التنبيهات */
 function rainAlert(hours){
  const wet=hours.filter(x=>
   (x.prob>=55&&x.rain>=0.1)||(x.rain>=0.5)
@@ -384,14 +404,10 @@ function rainAlert(hours){
  const total=hours.reduce((a,x)=>a+(finite(x.rain)?Math.max(0,x.rain):0),0);
  const maxProb=Math.max(...hours.map(x=>finite(x.prob)?x.prob:0));
  let msg="🌧️ ";
- if(first.prob>=70){
-  msg+="احتمال مرتفع لهطول الأمطار ";
- }else{
-  msg+="هناك احتمال لهطول زخات مطر ";
- }
+ msg+=first.prob>=70?"احتمال مرتفع لهطول الأمطار ":"هناك احتمال لهطول زخات مطر ";
  msg+="ابتداءً من "+timeLabel(first.time)+
  "، واحتمال الهطول يصل إلى "+Math.round(maxProb)+"%.";
- if(total>0)msg+=" مجموع الهطول المتوقع في الساعات المعروضة نحو "+total.toFixed(1)+" ملم.";
+ if(total>0)msg+=" مجموع الهطول المتوقع نحو "+total.toFixed(1)+" ملم.";
  return msg;
 }
 
@@ -404,8 +420,8 @@ function makeAlerts(hours){
   x.code>=95||(finite(x.thunder)&&x.thunder>=50&&finite(x.cape)&&x.cape>=300)
  );
  if(thunder){
-  alerts.push("⛈️ توجد مؤشرات على نشاط رعدي محتمل ابتداءً من "+timeLabel(thunder.time)+
-  ". هذا احتمال نموذجي وليس تأكيداً لحدوث العاصفة.");
+  alerts.push("⛈️ توجد مؤشرات على نشاط رعدي محتمل ابتداءً من "+
+  timeLabel(thunder.time)+". هذا احتمال نموذجي وليس تأكيداً لحدوث العاصفة.");
  }
 
  const gust=Math.max(0,...hours.map(x=>finite(x.gust)?x.gust:0));
@@ -415,6 +431,7 @@ function makeAlerts(hours){
  return alerts.join(" ");
 }
 
+/* الغبار */
 function dustInfo(data,now){
  const h=data?.hourly;
  if(!h||!Array.isArray(h.dust))return null;
@@ -446,8 +463,7 @@ function renderDust(d){
  ".<small>المصدر: CAMS عبر Open-Meteo. هذه بيانات نموذجية وليست قياساً محلياً للرؤية.</small>";
 }
 
-/* ---------------- الثقة ---------------- */
-
+/* تقييم الثقة */
 function confidenceText(hours){
  const next=hours.slice(0,24);
  if(next.length<12)return"بيانات محدودة؛ الثقة غير كافية للتقييم.";
@@ -455,25 +471,26 @@ function confidenceText(hours){
  if(probs.length<8)return"الثقة غير محددة بسبب نقص بعض البيانات.";
  const rainCount=probs.filter(x=>x>=50).length;
  const high=probs.filter(x=>x>=70).length;
- if(rainCount===0||rainCount<=2)
+ if(rainCount<=2)
   return"ثقة جيدة نسبياً في عدم وجود إشارة مطر واسعة خلال 24 ساعة، مع بقاء احتمال التغير.";
  if(high>=6)
   return"إشارة مطر واضحة في عدة ساعات؛ التوقيت والكمية قابلان للتغير.";
  return"ثقة متوسطة؛ توجد احتمالات مطر متفرقة وتحتاج إلى متابعة.";
 }
 
-/* ---------------- التحميل ---------------- */
-
+/* تحميل البيانات */
 async function load(){
  if(loading)return;
  loading=true;
  $("live").textContent="جارٍ تحديث البيانات...";
  $("live").classList.remove("off");
+
  try{
   const results=await Promise.allSettled([
    getJSON(WEATHER_URL),
    getJSON(DUST_URL)
   ]);
+
   if(results[0].status!=="fulfilled")throw results[0].reason;
 
   const data=results[0].value;
@@ -482,14 +499,12 @@ async function load(){
 
   const now=Math.floor(Date.now()/1000);
   const c=data.current;
-  const h=data.hourly;
   const days=dailyData(data);
   const dust=results[1].status==="fulfilled"?
    dustInfo(results[1].value,now):null;
 
   S={
-   data,
-   now,
+   data,now,
    current:{
     temp:num(c.temperature_2m),
     feels:num(c.apparent_temperature),
@@ -503,9 +518,7 @@ async function load(){
     rain:num(c.precipitation),
     isDay:num(c.is_day)
    },
-   days,
-   dust,
-   stale:false
+   days,dust,stale:false
   };
 
   S.hours=hourlyDay(days[0],now);
@@ -518,8 +531,10 @@ async function load(){
   $("updated").textContent="آخر تحديث: "+timeLabel(now);
 
   render();
+
  }catch(err){
   console.error("Weather error:",err);
+
   if(S){
    S.stale=true;
    $("live").textContent="تعذر التحديث · آخر بيانات محفوظة";
@@ -533,15 +548,16 @@ async function load(){
    $("alert").hidden=false;
    $("alert").textContent="لا توجد بيانات حديثة حالياً. تحقق من الاتصال بالإنترنت وحاول التحديث.";
   }
+
   clearTimeout(retryTimer);
   retryTimer=setTimeout(load,60000);
+
  }finally{
   loading=false;
  }
 }
 
-/* ---------------- العرض ---------------- */
-
+/* تفاصيل الصفوف */
 function row(ico,label,value,detail){
  return `<details class="row">
  <summary><span class="ri">${ico}</span>
@@ -566,6 +582,7 @@ function uvText(v){
  return"شديد";
 }
 
+/* عرض البيانات */
 function render(){
  if(!S)return;
  const c=S.current;
@@ -583,6 +600,7 @@ function render(){
  $("alert").hidden=!S.alert;
  $("alert").textContent=S.alert;
  $("confidence").textContent="مستوى الثقة: "+S.confidence;
+
  renderDust(S.dust);
  renderDays();
  renderSelected();
@@ -594,10 +612,11 @@ function render(){
   $("trt").textContent="اتجاه الحرارة خلال الأيام الثلاثة المقبلة: "+
    (diff>1.5?"ارتفاع تدريجي":diff<-1.5?"انخفاض تدريجي":"استقرار نسبي")+".";
   $("trend").hidden=false;
- }else $("trend").hidden=true;
+ }else{
+  $("trend").hidden=true;
+ }
 
  $("src").textContent="📡 المصدر: Open-Meteo Forecast + CAMS Air Quality · إحداثيات مركز الشرقاط";
- setScene(w[0],night,c.cloud);
 }
 
 function renderDays(){
@@ -617,10 +636,14 @@ function renderSelected(){
  if(!d)return;
 
  const hours=hourlyDay(d,S.now);
+
  $("hs").innerHTML=hours.map((x,i)=>{
   const w=weather(x.code);
-  const night=(new Date(x.time*1000).getHours()<6||
-  new Date(x.time*1000).getHours()>=18);
+  const localHour=Number(new Intl.DateTimeFormat("en-GB",{
+   timeZone:TZ,hour:"2-digit",hourCycle:"h23"
+  }).format(new Date(x.time*1000)));
+  const night=localHour<6||localHour>=18;
+
   return `<div class="h">
   <b>${Math.round(x.temp)}°</b>
   ${icon(w[0],night,31)}
@@ -643,10 +666,14 @@ function renderSelected(){
  " الاتجاه السائد: "+directionText(d.direction)+".";
 
  const current=SEL===0?S.current:null;
+ const validHum=hours.filter(x=>finite(x.humidity));
+ const validPressure=hours.filter(x=>finite(x.pressure));
+
  const hum=current?current.humidity:
-  hours.length?hours.reduce((a,x)=>a+(finite(x.humidity)?x.humidity:0),0)/hours.filter(x=>finite(x.humidity)).length:NaN;
+  validHum.length?validHum.reduce((a,x)=>a+x.humidity,0)/validHum.length:NaN;
+
  const pressure=current?current.pressure:
-  hours.length?hours.reduce((a,x)=>a+(finite(x.pressure)?x.pressure:0),0)/hours.filter(x=>finite(x.pressure)).length:NaN;
+  validPressure.length?validPressure.reduce((a,x)=>a+x.pressure,0)/validPressure.length:NaN;
 
  const uv=finite(d.uv)?d.uv:NaN;
  const visibility=hours.filter(x=>finite(x.visibility)).map(x=>x.visibility);
@@ -678,8 +705,7 @@ function renderSelected(){
  "أعلى قيمة CAPE في التوقعات الساعية. ارتفاعها قد يشير إلى قابلية الحمل الحراري، لكنه لا يؤكد حدوث العواصف.");
 }
 
-/* ---------------- أحداث ---------------- */
-
+/* الأحداث */
 $("days").addEventListener("click",e=>{
  const b=e.target.closest(".d");
  if(!b)return;
@@ -695,222 +721,18 @@ $("ref").addEventListener("click",()=>{
  load();
 });
 
-/* ---------------- المشهد الجوي المتحرك ---------------- */
-
-const cv=$("fx");
-const ctx=cv.getContext("2d");
-
-const PALETTE={
- day:{
- clear:["#2079ca","#9edcff"],
- part:["#397fc1","#9bc9e6"],
- cloud:["#63798e","#b4c3d1"],
- fog:["#858f9a","#c8d0d7"],
- rain:["#354b63","#8496aa"],
- storm:["#151e31","#586b83"],
- snow:["#7c91a8","#d7e3ef"]
- },
- night:{
- clear:["#07132e","#344a79"],
- part:["#101c3b","#52648a"],
- cloud:["#182538","#536579"],
- fog:["#283341","#75818e"],
- rain:["#101a2c","#3c5068"],
- storm:["#090f1e","#37465c"],
- snow:["#26364b","#71869e"]
- }
-};
-
-function resizeScene(){
- const r=cv.parentElement.getBoundingClientRect();
- const ratio=Math.min(devicePixelRatio||1,2);
- W=r.width||300;H=r.height||170;
- cv.width=Math.round(W*ratio);
- cv.height=Math.round(H*ratio);
- ctx.setTransform(ratio,0,0,ratio,0,0);
-}
-
-function setScene(k,night,cloud){
- const key=k+"-"+night;
- if(key===lastScene)return;
- lastScene=key;
- resizeScene();
-
- const R=Math.random;
- clouds=Array.from({length:Math.round(Math.max(1,cloud/14))},()=>({
-  x:R()*W,y:R()*H*.48+5,
-  size:35+R()*45,speed:.12+R()*.25
- }));
- stars=Array.from({length:45},()=>({
-  x:R()*W,y:R()*H*.65,r:R()*1.2+.3,p:R()*6
- }));
- const count=k==="rain"?75:k==="storm"?110:k==="snow"?50:0;
- particles=Array.from({length:count},()=>({
-  x:R()*W,y:R()*H,speed:2+R()*7
- }));
- $("sceneLabel").textContent=
-  k==="clear"?"سماء صافية":
-  k==="part"?"غيوم متفرقة":
-  k==="cloud"?"سماء غائمة":
-  k==="rain"?"أجواء ممطرة":
-  k==="storm"?"عواصف رعدية محتملة":
-  k==="snow"?"تساقط ثلجي":
-  "أجواء ضبابية";
- drawScene(performance.now());
- startAnimation();
-}
-
-function hill(y,a,f,color){
- ctx.fillStyle=color;
- ctx.beginPath();
- ctx.moveTo(0,H);
- for(let x=0;x<=W;x+=7){
-  ctx.lineTo(x,y+Math.sin(x/f)*a);
- }
- ctx.lineTo(W,H);
- ctx.fill();
-}
-
-function drawCloud(c,color){
- ctx.fillStyle=color;
- ctx.beginPath();
- ctx.ellipse(c.x,c.y,c.size*.7,10,0,0,Math.PI*2);
- ctx.ellipse(c.x-c.size*.25,c.y-8,c.size*.33,15,0,0,Math.PI*2);
- ctx.ellipse(c.x+c.size*.18,c.y-13,c.size*.38,20,0,0,Math.PI*2);
- ctx.fill();
-}
-
-function drawScene(t){
- if(!S)return;
- const c=S.current;
- const night=c.isDay===0;
- const k=weather(c.code)[0];
- const pal=PALETTE[night?"night":"day"][k]||PALETTE.day.clear;
-
- const grad=ctx.createLinearGradient(0,0,0,H);
- grad.addColorStop(0,pal[0]);
- grad.addColorStop(1,pal[1]);
- ctx.fillStyle=grad;
- ctx.fillRect(0,0,W,H);
-
- if(night){
-  stars.forEach(s=>{
-   ctx.globalAlpha=.3+.7*Math.abs(Math.sin(t/900+s.p));
-   ctx.fillStyle="#fff";
-   ctx.beginPath();
-   ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-   ctx.fill();
-  });
-  ctx.globalAlpha=1;
-  ctx.fillStyle="#f3e8bc";
-  ctx.beginPath();
-  ctx.arc(W*.2,H*.28,14,0,Math.PI*2);
-  ctx.fill();
- }else{
-  const r=ctx.createRadialGradient(W*.2,H*.28,2,W*.2,H*.28,65);
-  r.addColorStop(0,"rgba(255,230,140,.95)");
-  r.addColorStop(1,"rgba(255,230,140,0)");
-  ctx.fillStyle=r;
-  ctx.fillRect(0,0,W,H);
- }
-
- clouds.forEach(c=>{
-  if(!reduce){
-   c.x+=c.speed;
-   if(c.x-c.size>W)c.x=-c.size;
-  }
-  drawCloud(c,night?"rgba(175,191,213,.45)":"rgba(255,255,255,.65)");
- });
-
- hill(H*.73,7,36,night?"rgba(23,39,54,.7)":"rgba(46,92,73,.45)");
- hill(H*.88,5,24,night?"rgba(9,19,34,.85)":"rgba(31,65,51,.85)");
-
- if(k==="fog"){
-  ctx.fillStyle="rgba(240,245,250,.25)";
-  ctx.fillRect(0,H*.35,W,H*.65);
-  ctx.strokeStyle="rgba(255,255,255,.35)";
-  ctx.lineWidth=3;
-  for(let y=H*.5;y<H*.85;y+=16){
-   ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
-  }
- }
-
- if(k==="rain"||k==="storm"){
-  ctx.strokeStyle="rgba(195,225,255,.8)";
-  ctx.lineWidth=1.5;
-  particles.forEach(p=>{
-   if(!reduce){
-    p.y+=p.speed;
-    p.x-=1.3;
-    if(p.y>H){p.y=-10;p.x=Math.random()*W}
-    if(p.x<0)p.x=W;
-   }
-   ctx.beginPath();
-   ctx.moveTo(p.x,p.y);
-   ctx.lineTo(p.x-3,p.y+9);
-   ctx.stroke();
-  });
- }
-
- if(k==="snow"){
-  ctx.fillStyle="white";
-  particles.forEach(p=>{
-   if(!reduce){
-    p.y+=p.speed*.3;
-    p.x+=Math.sin(p.y/20);
-    if(p.y>H){p.y=-5;p.x=Math.random()*W}
-   }
-   ctx.beginPath();
-   ctx.arc(p.x,p.y,2,0,Math.PI*2);
-   ctx.fill();
-  });
- }
-
- if(k==="storm"&&!reduce&&Math.random()<.005)flash=1;
- if(flash>0){
-  ctx.fillStyle="rgba(255,255,255,"+(flash*.45)+")";
-  ctx.fillRect(0,0,W,H);
-  flash=Math.max(0,flash-.08);
- }
-}
-
-function animationLoop(t){
- drawScene(t);
- raf=requestAnimationFrame(animationLoop);
-}
-function startAnimation(){
- if(!reduce&&!raf&&onScreen&&!document.hidden)
-  raf=requestAnimationFrame(animationLoop);
-}
-function stopAnimation(){
- if(raf)cancelAnimationFrame(raf);
- raf=0;
-}
-if("IntersectionObserver"in window){
- new IntersectionObserver(entries=>{
-  onScreen=entries[0].isIntersecting;
-  if(onScreen)startAnimation();
-  else stopAnimation();
- }).observe(cv.parentElement);
-}
+/* إعادة التحميل عند العودة للصفحة */
 document.addEventListener("visibilitychange",()=>{
- if(document.hidden)stopAnimation();
- else{startAnimation();load()}
-});
-window.addEventListener("resize",()=>{
- resizeScene();
- if(S)drawScene(performance.now());
+ if(!document.hidden)load();
 });
 
-/* ---------------- تشغيل وتحديث ---------------- */
-
-resizeScene();
+/* تشغيل وتحديث */
 load();
 
-/* التحديث الدوري كل 20 دقيقة */
-refreshTimer=setInterval(load,20*60*1000);
+/* تحديث الطقس كل 20 دقيقة */
+setInterval(load,20*60*1000);
 
-/* إعادة المحاولة عند عودة الاتصال */
+/* إعادة المحاولة عند عودة الإنترنت */
 window.addEventListener("online",load);
 
 /* ارتفاع الصفحة داخل الإطار */
@@ -924,7 +746,7 @@ if("ResizeObserver"in window){
  }).observe($("wrap"));
 }
 
-/* تسجيل Service Worker إن كان موجوداً */
+/* تسجيل Service Worker إذا كان موجوداً */
 if("serviceWorker"in navigator){
  window.addEventListener("load",()=>{
   navigator.serviceWorker.register("./sw.js")
