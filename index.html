@@ -160,6 +160,29 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
 .metric b { display: block; font-size: 0.95rem; direction: ltr; margin-top: 2px; font-weight: 700; }
 .metric span { color: var(--mut); font-weight: 600; }
 
+.mapTabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 10px;
+}
+.mapTabs button {
+  flex: 1;
+  padding: 8px 6px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--soft);
+  color: var(--mut);
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+.mapTabs button.on {
+  background: var(--accent-grad);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: var(--shadow);
+}
+
 .sectionTitle {
   font-weight: 800;
   font-size: 0.92rem;
@@ -405,22 +428,27 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
   <div class="metric"><span>الضغط</span><b id="pressure">--</b></div>
  </div>
 
+ <div class="mapTabs" id="mapTabs">
+  <button type="button" data-map="clouds" class="on">☁️ حركة الغيوم</button>
+  <button type="button" data-map="satellite">🛰️ قمر صناعي</button>
+ </div>
+
  <div class="scene">
   <iframe
    id="satelliteFrame"
    title="صور الأقمار الصناعية والغيوم فوق الشرقاط"
-   src="https://embed.windy.com/embed2.html?lat=35.5036&lon=43.2325&detailLat=35.5036&detailLon=43.2325&width=760&height=320&zoom=7&level=surface&overlay=satellite&product=satellite&menu=&message=true&marker=true&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default"
-   loading="lazy"
+   src="https://embed.windy.com/embed2.html?lat=35.5036&lon=43.2325&detailLat=35.5036&detailLon=43.2325&width=760&height=320&zoom=7&level=surface&overlay=clouds&product=ecmwf&menu=&message=true&marker=true&calendar=24&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default"
    allowfullscreen>
   </iframe>
-  <span class="sceneLabel">صور الأقمار الصناعية · الشرقاط</span>
-  <span class="satNote">عرض من Windy</span>
+  <span class="sceneLabel" id="sceneLabel">حركة الغيوم · الشرقاط</span>
+  <span class="satNote">اضغط ▶ لتشغيل الحركة · Windy</span>
  </div>
 </section>
 
 <div class="sectionTitle">⏰ توقعات ساعات اليوم المختار</div>
 <div class="hs" id="hs"></div>
 
+<div class="box" id="rainNow"></div>
 <div class="box" id="alert" hidden></div>
 <div class="box dust" id="dustBox" hidden></div>
 
@@ -474,6 +502,28 @@ let SEL = 0;
 let loading = false;
 let retryTimer = 0;
 let lastOk = 0;
+
+/* ===== الخريطة: تبديل بين الغيوم والقمر الصناعي ===== */
+const MAP_BASE =
+"https://embed.windy.com/embed2.html?lat=" + LAT + "&lon=" + LON +
+"&detailLat=" + LAT + "&detailLon=" + LON +
+"&width=760&height=320&zoom=7&level=surface";
+const MAP_TAIL =
+"&menu=&message=true&marker=true&calendar=24&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default";
+const MAPS = {
+ clouds:    { url: MAP_BASE + "&overlay=clouds&product=ecmwf" + MAP_TAIL,       label: "حركة الغيوم · الشرقاط" },
+ satellite: { url: MAP_BASE + "&overlay=satellite&product=satellite" + MAP_TAIL, label: "صور الأقمار الصناعية · الشرقاط" }
+};
+
+$("mapTabs").addEventListener("click", e => {
+ const b = e.target.closest("button[data-map]");
+ if(!b) return;
+ const m = MAPS[b.dataset.map];
+ if(!m) return;
+ document.querySelectorAll("#mapTabs button").forEach(x => x.classList.toggle("on", x === b));
+ $("satelliteFrame").src = m.url;
+ $("sceneLabel").textContent = m.label;
+});
 
 function tick(){
  const now = new Date();
@@ -632,9 +682,9 @@ function rainAlert(hours){
  return msg;
 }
 
-function makeAlerts(hours){
+function makeAlerts(hours, skipRain){
  const alerts = [];
- const rain = rainAlert(hours);
+ const rain = skipRain ? "" : rainAlert(hours);
  if(rain) alerts.push(rain);
  const thunder = hours.find(x => x.code>=95 || (finite(x.cape)&&x.cape>=1000&&finite(x.prob)&&x.prob>=40));
  if(thunder) alerts.push("⛈️ مؤشرات على نشاط رعدي محتمل ابتداءً من " + timeLabel(thunder.time) + ".");
@@ -669,6 +719,56 @@ function renderDust(d){
  if(d.current>=1000) level = "تركيز غبار مرتفع جداً";
  else if(d.current>=500) level = "تركيز غبار مرتفع";
  el.innerHTML = `<b>🌫️ رصد الغبار الجوي</b> ${level}، التركيز الحالي التقديري ${Math.round(d.current)} ميكروغرام/م³، وأعلى قمة متوقعة ${Math.round(d.peak)} عند ${timeLabel(d.time)}.<small>المصدر: CAMS عبر Open-Meteo.</small>`;
+}
+
+const RAIN_CODES = [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99];
+
+function isRainingNow(){
+ if(!S) return false;
+ const c = S.current;
+ return (finite(c.rain) && c.rain >= 0.1) || RAIN_CODES.includes(c.code);
+}
+
+function renderRainNow(){
+ const el = $("rainNow");
+ const c = S.current;
+ const w = weather(c.code);
+
+ // أيام أخرى: حالة اليوم + احتمال المطر
+ if(SEL !== 0){
+  const d = S.days[SEL];
+  const p = finite(d.prob) ? Math.round(d.prob) : NaN;
+  el.innerHTML = "📅 " + d.txt + (finite(p) && p >= 20 ? " · احتمال المطر " + p + "%" : " · لا مطر متوقع");
+  return;
+ }
+
+ // ممطر الآن: تختفي النسبة ويظهر ممطر
+ if(isRainingNow()){
+  const storm = w[0] === "storm";
+  const detail = (w[0] === "rain" || storm) ? "<small>" + w[1] + "</small>" : "";
+  el.innerHTML = (storm ? "⛈️ جو ممطر مع عواصف رعدية" : "🌧️ الجو ممطر الآن") + detail;
+  return;
+ }
+
+ // غير ممطر: الحالة الحالية + احتمال المطر خلال الساعات القادمة
+ const h = S.data.hourly;
+ let maxP = NaN, peakT = 0, n = 0;
+ for(let i = 0; i < h.time.length && n < 6; i++){
+  const t = Number(h.time[i]);
+  if(t <= S.now) continue;
+  n++;
+  const p = num(h.precipitation_probability[i]);
+  if(finite(p) && (!finite(maxP) || p > maxP)){ maxP = p; peakT = t; }
+ }
+ const emoji = { clear: c.isDay === 0 ? "🌙" : "☀️", part: "⛅", cloud: "☁️", fog: "🌫️" }[w[0]] || "☁️";
+ let text = emoji + " " + w[1];
+ if(finite(maxP) && maxP >= 20){
+  text += " · احتمال المطر خلال الساعات القادمة " + Math.round(maxP) + "%";
+  text += "<small>الأعلى عند " + timeLabel(peakT) + "</small>";
+ } else {
+  text += " · لا مطر متوقع خلال الساعات القادمة";
+ }
+ el.innerHTML = text;
 }
 
 function confidenceText(hours){
@@ -852,7 +952,8 @@ function renderSelected(){
 
  // التنبيهات والثقة والغبار حسب اليوم المختار
  const upcoming = SEL===0 ? hours.filter(x => x.time >= S.now - 3600) : hours;
- const alertText = makeAlerts(upcoming);
+ const alertText = makeAlerts(upcoming, SEL===0 && isRainingNow());
+ renderRainNow();
  $("alert").hidden = !alertText;
  $("alert").textContent = alertText;
  $("confidence").textContent = "مستوى الثقة بالتوقعات: " + confidenceText(upcoming);
