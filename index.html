@@ -67,45 +67,20 @@ button{font:inherit;color:inherit;cursor:pointer}
 .h b{font-size:.9rem;direction:ltr}
 .h small{color:#2788db;min-height:15px}
 
-/* مشهد الأقمار الصناعية الخريطة المعدلة */
 .scene{
-height:340px;
-position:relative;
-overflow:hidden;
-background:#172b40;
-border-radius:0 0 16px 16px;
-margin-top:4px;
+height:340px;position:relative;overflow:hidden;
+background:#172b40;border-radius:0 0 16px 16px;margin-top:4px;
 }
-#satelliteFrame{
-position:absolute;
-inset:0;
-width:100%;
-height:100%;
-border:0;
-}
+#satelliteFrame{position:absolute;inset:0;width:100%;height:100%;border:0}
 .sceneLabel{
-position:absolute;
-bottom:6px;
-right:8px;
-z-index:2;
-color:white;
-font-size:.68rem;
-background:rgba(0,0,0,0.65);
-padding:2px 8px;
-border-radius:6px;
-pointer-events:none;
+position:absolute;bottom:6px;right:8px;z-index:2;color:white;
+font-size:.68rem;background:rgba(0,0,0,.65);
+padding:2px 8px;border-radius:6px;pointer-events:none;
 }
 .satNote{
-font-size:.66rem;
-color:#fff;
-background:rgba(0,0,0,0.65);
-position:absolute;
-left:8px;
-bottom:6px;
-padding:2px 7px;
-border-radius:6px;
-z-index:2;
-pointer-events:none;
+font-size:.66rem;color:#fff;background:rgba(0,0,0,.65);
+position:absolute;left:8px;bottom:6px;padding:2px 7px;
+border-radius:6px;z-index:2;pointer-events:none;
 }
 
 .box{padding:8px 11px;border-radius:10px;border-right:4px solid #2788db;background:var(--info);font-size:.82rem;line-height:1.6;font-weight:bold}
@@ -141,12 +116,8 @@ pointer-events:none;
 .foot small{font-size:.68rem;color:var(--mut)}
 .conf{font-size:.74rem;color:var(--mut);padding:5px 8px;background:var(--card);border-radius:8px}
 
-@media(max-width:420px){
-.scene{height:280px}
-}
-@media(prefers-reduced-motion:reduce){
-*{animation:none!important;transition:none!important}
-}
+@media(max-width:420px){.scene{height:280px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 
@@ -229,54 +200,75 @@ pointer-events:none;
 <script>
 "use strict";
 
-const $=id=>document.getElementById(id);
+const $ = id => document.getElementById(id);
 
-const LAT=35.5036;
-const LON=43.2325;
-const TZ="Asia/Baghdad";
+const LAT = 35.5036;
+const LON = 43.2325;
+const TZ = "Asia/Baghdad";
 
-const DAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
-const finite=Number.isFinite;
-const num=v=>v===null||v===undefined||v===""?NaN:Number(v);
+const finite = Number.isFinite;
+const num = v => v === null || v === undefined || v === "" ? NaN : Number(v);
 
-const fmtTime=new Intl.DateTimeFormat("ar-IQ-u-nu-latn",{
+const fmtTime = new Intl.DateTimeFormat("ar-IQ-u-nu-latn", {
  timeZone:TZ,hour:"numeric",minute:"2-digit",hour12:true
 });
-const fmtHour=new Intl.DateTimeFormat("ar-IQ-u-nu-latn",{
+
+const fmtHour = new Intl.DateTimeFormat("ar-IQ-u-nu-latn", {
  timeZone:TZ,hour:"numeric",hour12:true
 });
-const fmtDate=new Intl.DateTimeFormat("ar-IQ",{
+
+const fmtDate = new Intl.DateTimeFormat("ar-IQ", {
  timeZone:TZ,weekday:"long",day:"numeric",month:"long",year:"numeric"
 });
-const fmtClock=new Intl.DateTimeFormat("en-GB",{
+
+const fmtClock = new Intl.DateTimeFormat("en-GB", {
  timeZone:TZ,hour:"2-digit",minute:"2-digit",hourCycle:"h23"
 });
 
-let S=null;
-let SEL=0;
-let loading=false;
-let retryTimer=0;
+const fmtWeekday = new Intl.DateTimeFormat("ar-IQ", {
+ timeZone:TZ,weekday:"long"
+});
+
+let S = null;
+let SEL = 0;
+let loading = false;
+let retryTimer = 0;
 
 function tick(){
- const now=new Date();
- const p={};
- fmtClock.formatToParts(now).forEach(x=>p[x.type]=x.value);
- const h=Number(p.hour);
- $("clk").textContent=(h%12||12)+":"+p.minute+(h<12?" ص":" م");
- $("date").textContent=fmtDate.format(now);
+ const now = new Date();
+ const parts = {};
+ fmtClock.formatToParts(now).forEach(x => parts[x.type] = x.value);
+
+ const h = Number(parts.hour);
+ $("clk").textContent = (h % 12 || 12) + ":" + parts.minute + (h < 12 ? " ص" : " م");
+ $("date").textContent = fmtDate.format(now);
 }
+
 tick();
 setInterval(tick,1000);
 
+/* استخراج التاريخ حسب توقيت الشرقاط */
 function localDay(sec){
- return new Date(sec*1000).toLocaleDateString("en-CA",{timeZone:TZ});
+ const parts = new Intl.DateTimeFormat("en-CA", {
+  timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit"
+ }).formatToParts(new Date(sec * 1000));
+
+ const p = {};
+ parts.forEach(x => p[x.type] = x.value);
+ return `${p.year}-${p.month}-${p.day}`;
 }
+
 function timeLabel(sec){
- return fmtTime.format(new Date(sec*1000));
+ return finite(sec) ? fmtTime.format(new Date(sec * 1000)) : "غير متوفر";
+}
+
+function safeRound(value,suffix=""){
+ return finite(value) ? Math.round(value) + suffix : "--";
 }
 
 function weather(code){
- code=Number(code);
+ code = Number(code);
+
  if(code===0)return["clear","سماء صافية"];
  if(code===1)return["clear","صحو غالباً"];
  if(code===2)return["part","غائم جزئياً"];
@@ -295,70 +287,93 @@ function weather(code){
  if(code===85||code===86)return["snow","زخات ثلجية"];
  if(code===95)return["storm","عواصف رعدية"];
  if(code===96||code===99)return["storm","عواصف رعدية مع احتمال البرد"];
+
  return["cloud","حالة جوية متغيرة"];
 }
 
 function icon(k,night,size=30){
- const sun=`<circle cx="28" cy="25" r="10" fill="#ffc43b"/>
+ const sun = `<circle cx="28" cy="25" r="10" fill="#ffc43b"/>
  <g stroke="#ffc43b" stroke-width="3" stroke-linecap="round">
  <path d="M28 4v5M28 41v5M7 25h5M44 25h5M13 10l4 4M39 36l4 4M43 10l-4 4M17 36l-4 4"/></g>`;
- const moon=`<path d="M34 8a18 18 0 1 0 14 28A18 18 0 0 1 34 8" fill="#f5df99"/>`;
- const cloud=`<g fill="#c6d1df">
+
+ const moon = `<path d="M34 8a18 18 0 1 0 14 28A18 18 0 0 1 34 8" fill="#f5df99"/>`;
+
+ const cloud = `<g fill="#c6d1df">
  <circle cx="19" cy="32" r="9"/><circle cx="30" cy="25" r="13"/>
  <circle cx="43" cy="33" r="9"/><rect x="13" y="31" width="37" height="12" rx="6"/></g>`;
- let body="";
- if(k==="clear")body=night?moon:sun;
- else if(k==="part")body=(night?moon:sun)+cloud;
- else body=cloud;
- if(k==="rain")body+=`<g stroke="#48a9ff" stroke-width="3" stroke-linecap="round"><path d="M20 44l-3 7M32 44l-3 7M44 44l-3 7"/></g>`;
- if(k==="snow")body+=`<g fill="#8dc8ff"><circle cx="20" cy="48" r="2.5"/><circle cx="32" cy="48" r="2.5"/><circle cx="44" cy="48" r="2.5"/></g>`;
- if(k==="storm")body+=`<path d="M31 39l-9 12h7l-2 9 12-15h-8z" fill="#ffd34c"/>`;
- if(k==="fog")body+=`<g stroke="#9baabd" stroke-width="3" stroke-linecap="round"><path d="M12 47h37M17 53h28"/></g>`;
- return `<svg viewBox="0 0 56 60" width="${size}" height="${size*60/56}">${body}</svg>`;
+
+ let body = "";
+
+ if(k==="clear")body = night ? moon : sun;
+ else if(k==="part")body = (night ? moon : sun) + cloud;
+ else body = cloud;
+
+ if(k==="rain")body += `<g stroke="#48a9ff" stroke-width="3" stroke-linecap="round"><path d="M20 44l-3 7M32 44l-3 7M44 44l-3 7"/></g>`;
+ if(k==="snow")body += `<g fill="#8dc8ff"><circle cx="20" cy="48" r="2.5"/><circle cx="32" cy="48" r="2.5"/><circle cx="44" cy="48" r="2.5"/></g>`;
+ if(k==="storm")body += `<path d="M31 39l-9 12h7l-2 9 12-15h-8z" fill="#ffd34c"/>`;
+ if(k==="fog")body += `<g stroke="#9baabd" stroke-width="3" stroke-linecap="round"><path d="M12 47h37M17 53h28"/></g>`;
+
+ return `<svg viewBox="0 0 56 60" width="${size}" height="${size*60/56}" aria-hidden="true">${body}</svg>`;
 }
 
-const WEATHER_URL=
-"https://api.open-meteo.com/v1/forecast?"+
-"latitude="+LAT+
-"&longitude="+LON+
-"&timezone="+encodeURIComponent(TZ)+
-"&forecast_days=7"+
-"&timeformat=unixtime"+
-"&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m"+
-"&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,uv_index,cape,thunderstorm_probability"+
+const WEATHER_URL =
+"https://api.open-meteo.com/v1/forecast?" +
+"latitude=" + LAT +
+"&longitude=" + LON +
+"&timezone=" + encodeURIComponent(TZ) +
+"&forecast_days=7" +
+"&timeformat=unixtime" +
+"&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m" +
+"&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,uv_index,cape,thunderstorm_probability" +
 "&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,uv_index_max";
 
-const DUST_URL=
-"https://air-quality-api.open-meteo.com/v1/air-quality?"+
-"latitude="+LAT+"&longitude="+LON+
-"&timezone="+encodeURIComponent(TZ)+
-"&forecast_days=3&timeformat=unixtime"+
-"&current=dust,pm10,aerosol_optical_depth"+
+const DUST_URL =
+"https://air-quality-api.open-meteo.com/v1/air-quality?" +
+"latitude=" + LAT + "&longitude=" + LON +
+"&timezone=" + encodeURIComponent(TZ) +
+"&forecast_days=3&timeformat=unixtime" +
+"&current=dust,pm10,aerosol_optical_depth" +
 "&hourly=dust,pm10,aerosol_optical_depth";
 
 async function getJSON(url){
- const controller=new AbortController();
- const timer=setTimeout(()=>controller.abort(),18000);
+ const controller = new AbortController();
+ const timer = setTimeout(() => controller.abort(),18000);
+
  try{
-  const r=await fetch(url,{signal:controller.signal,cache:"no-store"});
-  if(!r.ok)throw Error("HTTP "+r.status);
-  return await r.json();
- }finally{clearTimeout(timer)}
+  const response = await fetch(url,{
+   signal:controller.signal,
+   cache:"no-store"
+  });
+
+  if(!response.ok)throw Error("HTTP " + response.status);
+
+  const data = await response.json();
+
+  if(data.error)throw Error(data.reason || "خطأ في مصدر البيانات");
+
+  return data;
+ }finally{
+  clearTimeout(timer);
+ }
 }
 
 function dailyData(data){
- const d=data.daily;
+ const d = data.daily;
+
  return d.time.map((t,i)=>{
-  const code=d.weather_code[i];
-  const w=weather(code);
-  return{
+  const code = num(d.weather_code[i]);
+  const w = weather(code);
+
+  return {
    time:Number(t),
    key:localDay(Number(t)),
    hi:num(d.temperature_2m_max[i]),
    lo:num(d.temperature_2m_min[i]),
    appHi:num(d.apparent_temperature_max[i]),
    appLo:num(d.apparent_temperature_min[i]),
-   code,k:w[0],txt:w[1],
+   code,
+   k:w[0],
+   txt:w[1],
    rain:num(d.precipitation_sum[i]),
    prob:num(d.precipitation_probability_max[i]),
    wind:num(d.wind_speed_10m_max[i]),
@@ -372,12 +387,15 @@ function dailyData(data){
 }
 
 function hourlyDay(day,now){
- const h=S.data.hourly;
- const result=[];
+ const h = S.data.hourly;
+ const result = [];
+
  for(let i=0;i<h.time.length;i++){
-  const t=Number(h.time[i]);
+  const t = Number(h.time[i]);
+
   if(localDay(t)!==day.key)continue;
-  if(day===S.days[0]&&t<now-3600)continue;
+  if(day.key===S.days[0].key && t<now-3600)continue;
+
   result.push({
    time:t,
    temp:num(h.temperature_2m[i]),
@@ -396,116 +414,176 @@ function hourlyDay(day,now){
    uv:num(h.uv_index[i])
   });
  }
+
  return result;
 }
 
 function rainAlert(hours){
- const wet=hours.filter(x=>
-  (x.prob>=55&&x.rain>=0.1)||(x.rain>=0.5)
+ const wet = hours.filter(x =>
+  (finite(x.prob)&&x.prob>=55&&finite(x.rain)&&x.rain>=0.1) ||
+  (finite(x.rain)&&x.rain>=0.5)
  );
- if(!wet.length)return"";
- const first=wet[0];
- const total=hours.reduce((a,x)=>a+(finite(x.rain)?Math.max(0,x.rain):0),0);
- const maxProb=Math.max(...hours.map(x=>finite(x.prob)?x.prob:0));
- let msg="🌧️ ";
- msg+=first.prob>=70?"احتمال مرتفع لهطول الأمطار ":"هناك احتمال لهطول زخات مطر ";
- msg+="ابتداءً من "+timeLabel(first.time)+
- "، واحتمال الهطول يصل إلى "+Math.round(maxProb)+"%.";
- if(total>0)msg+=" مجموع الهطول المتوقع نحو "+total.toFixed(1)+" ملم.";
+
+ if(!wet.length)return "";
+
+ const first = wet[0];
+ const total = hours.reduce((a,x) =>
+  a + (finite(x.rain) ? Math.max(0,x.rain) : 0),0);
+
+ const probabilities = hours.map(x=>x.prob).filter(finite);
+ const maxProb = probabilities.length ? Math.max(...probabilities) : NaN;
+
+ let msg = "🌧️ ";
+ msg += first.prob>=70
+  ? "احتمال مرتفع لهطول الأمطار "
+  : "هناك احتمال لهطول زخات مطر ";
+
+ msg += "ابتداءً من " + timeLabel(first.time);
+
+ if(finite(maxProb))msg += "، واحتمال الهطول يصل إلى " + Math.round(maxProb) + "%";
+
+ msg += ".";
+
+ if(total>0)msg += " مجموع الهطول المتوقع نحو " + total.toFixed(1) + " ملم.";
+
  return msg;
 }
 
 function makeAlerts(hours){
- const alerts=[];
- const rain=rainAlert(hours);
+ const alerts = [];
+
+ const rain = rainAlert(hours);
  if(rain)alerts.push(rain);
 
- const thunder=hours.find(x=>
-  x.code>=95||(finite(x.thunder)&&x.thunder>=50&&finite(x.cape)&&x.cape>=300)
+ const thunder = hours.find(x =>
+  x.code>=95 ||
+  (finite(x.thunder)&&x.thunder>=50&&finite(x.cape)&&x.cape>=300)
  );
+
  if(thunder){
-  alerts.push("⛈️ توجد مؤشرات على نشاط رعدي محتمل ابتداءً من "+
-  timeLabel(thunder.time)+". هذا احتمال نموذجي وليس تأكيداً لحدوث العاصفة.");
+  alerts.push("⛈️ توجد مؤشرات على نشاط رعدي محتمل ابتداءً من " +
+  timeLabel(thunder.time) +
+  ". هذا احتمال نموذجي وليس تأكيداً لحدوث العاصفة.");
  }
 
- const gust=Math.max(0,...hours.map(x=>finite(x.gust)?x.gust:0));
- if(gust>=60)alerts.push("💨 تنبيه: هبات رياح قوية قد تصل إلى "+Math.round(gust)+" كم/س.");
- else if(gust>=40)alerts.push("💨 نشاط ملحوظ في الرياح، وقد تصل الهبات إلى "+Math.round(gust)+" كم/س.");
+ const gusts = hours.map(x=>x.gust).filter(finite);
+ const gust = gusts.length ? Math.max(...gusts) : 0;
+
+ if(gust>=60){
+  alerts.push("💨 تنبيه: هبات رياح قوية قد تصل إلى " + Math.round(gust) + " كم/س.");
+ }else if(gust>=40){
+  alerts.push("💨 نشاط ملحوظ في الرياح، وقد تصل الهبات إلى " + Math.round(gust) + " كم/س.");
+ }
 
  return alerts.join(" ");
 }
 
 function dustInfo(data,now){
- const h=data?.hourly;
+ const h = data?.hourly;
+
  if(!h||!Array.isArray(h.dust))return null;
- const a=[];
+
+ const values = [];
+
  for(let i=0;i<h.time.length;i++){
-  const t=Number(h.time[i]),v=num(h.dust[i]);
-  if(finite(t)&&finite(v)&&t>=now-1800&&t<=now+12*3600)
-   a.push({time:t,value:v});
+  const t = Number(h.time[i]);
+  const v = num(h.dust[i]);
+
+  if(finite(t)&&finite(v)&&t>=now-1800&&t<=now+12*3600){
+   values.push({time:t,value:v});
+  }
  }
- if(!a.length)return null;
- const peak=a.reduce((x,y)=>y.value>x.value?y:x);
- const current=num(data.current?.dust);
- const v=finite(current)?current:a[0].value;
+
+ if(!values.length)return null;
+
+ const peak = values.reduce((x,y)=>y.value>x.value?y:x);
+ const current = num(data.current?.dust);
+ const v = finite(current) ? current : values[0].value;
+
  if(v<200&&peak.value<500)return null;
- return{current:v,peak:peak.value,time:peak.time};
+
+ return {current:v,peak:peak.value,time:peak.time};
 }
 
 function renderDust(d){
- const el=$("dustBox");
- if(!d){el.hidden=true;return}
- el.hidden=false;
- let level="ارتفاع ملحوظ";
- if(d.current>=1000)level="تركيز مرتفع جداً";
- else if(d.current>=500)level="تركيز مرتفع";
- el.innerHTML="<b>🌫️ متابعة الغبار الجوي</b>"+
- level+"، تركيز الغبار الحالي التقديري "+Math.round(d.current)+
- " ميكروغرام/م³، وأعلى قيمة متوقعة خلال الساعات القادمة "+
- Math.round(d.peak)+" ميكروغرام/م³ عند "+timeLabel(d.time)+
+ const el = $("dustBox");
+
+ if(!d){
+  el.hidden = true;
+  return;
+ }
+
+ el.hidden = false;
+
+ let level = "ارتفاع ملحوظ";
+ if(d.current>=1000)level = "تركيز مرتفع جداً";
+ else if(d.current>=500)level = "تركيز مرتفع";
+
+ el.innerHTML =
+ "<b>🌫️ متابعة الغبار الجوي</b> " +
+ level + "، تركيز الغبار الحالي التقديري " +
+ Math.round(d.current) + " ميكروغرام/م³، وأعلى قيمة متوقعة خلال الساعات القادمة " +
+ Math.round(d.peak) + " ميكروغرام/م³ عند " + timeLabel(d.time) +
  ".<small>المصدر: CAMS عبر Open-Meteo. هذه بيانات نموذجية وليست قياساً محلياً للرؤية.</small>";
 }
 
 function confidenceText(hours){
- const next=hours.slice(0,24);
- if(next.length<12)return"بيانات محدودة؛ الثقة غير كافية للتقييم.";
- const probs=next.map(x=>x.prob).filter(finite);
- if(probs.length<8)return"الثقة غير محددة بسبب نقص بعض البيانات.";
- const rainCount=probs.filter(x=>x>=50).length;
- const high=probs.filter(x=>x>=70).length;
- if(rainCount<=2)
-  return"ثقة جيدة نسبياً في عدم وجود إشارة مطر واسعة خلال 24 ساعة، مع بقاء احتمال التغير.";
- if(high>=6)
-  return"إشارة مطر واضحة في عدة ساعات؛ التوقيت والكمية قابلان للتغير.";
- return"ثقة متوسطة؛ توجد احتمالات مطر متفرقة وتحتاج إلى متابعة.";
+ const next = hours.slice(0,24);
+
+ if(next.length<12)return "بيانات محدودة؛ الثقة غير كافية للتقييم.";
+
+ const probs = next.map(x=>x.prob).filter(finite);
+
+ if(probs.length<8)return "الثقة غير محددة بسبب نقص بعض البيانات.";
+
+ const rainCount = probs.filter(x=>x>=50).length;
+ const high = probs.filter(x=>x>=70).length;
+
+ if(rainCount<=2){
+  return "ثقة جيدة نسبياً في عدم وجود إشارة مطر واسعة خلال 24 ساعة، مع بقاء احتمال التغير.";
+ }
+
+ if(high>=6){
+  return "إشارة مطر واضحة في عدة ساعات؛ التوقيت والكمية قابلان للتغير.";
+ }
+
+ return "ثقة متوسطة؛ توجد احتمالات مطر متفرقة وتحتاج إلى متابعة.";
 }
 
 async function load(){
  if(loading)return;
- loading=true;
- $("live").textContent="جارٍ تحديث البيانات...";
+
+ loading = true;
+ $("live").textContent = "جارٍ تحديث البيانات...";
  $("live").classList.remove("off");
 
  try{
-  const results=await Promise.allSettled([
+  const results = await Promise.allSettled([
    getJSON(WEATHER_URL),
    getJSON(DUST_URL)
   ]);
 
   if(results[0].status!=="fulfilled")throw results[0].reason;
 
-  const data=results[0].value;
-  if(!data.current||!data.hourly||!data.daily)
+  const data = results[0].value;
+
+  if(!data.current||!data.hourly||!data.daily){
    throw Error("البيانات الجوية غير مكتملة");
+  }
 
-  const now=Math.floor(Date.now()/1000);
-  const c=data.current;
-  const days=dailyData(data);
-  const dust=results[1].status==="fulfilled"?
-   dustInfo(results[1].value,now):null;
+  const now = Math.floor(Date.now()/1000);
+  const c = data.current;
+  const days = dailyData(data);
 
-  S={
-   data,now,
+  if(!days.length)throw Error("لا توجد توقعات يومية");
+
+  const dust = results[1].status==="fulfilled"
+   ? dustInfo(results[1].value,now)
+   : null;
+
+  S = {
+   data,
+   now,
    current:{
     temp:num(c.temperature_2m),
     feels:num(c.apparent_temperature),
@@ -519,17 +597,20 @@ async function load(){
     rain:num(c.precipitation),
     isDay:num(c.is_day)
    },
-   days,dust,stale:false
+   days,
+   dust,
+   stale:false
   };
 
-  S.hours=hourlyDay(days[0],now);
-  S.alert=makeAlerts(S.hours);
-  S.confidence=confidenceText(S.hours);
+  S.hours = hourlyDay(days[0],now);
+  S.alert = makeAlerts(S.hours);
+  S.confidence = confidenceText(S.hours);
 
-  SEL=0;
-  $("live").textContent="محدَّث";
+  SEL = 0;
+
+  $("live").textContent = "محدَّث";
   $("live").classList.remove("off");
-  $("updated").textContent="آخر تحديث: "+timeLabel(now);
+  $("updated").textContent = "آخر تحديث: " + timeLabel(now);
 
   render();
 
@@ -537,181 +618,234 @@ async function load(){
   console.error("Weather error:",err);
 
   if(S){
-   S.stale=true;
-   $("live").textContent="تعذر التحديث · آخر بيانات محفوظة";
+   S.stale = true;
+   $("live").textContent = "تعذر التحديث · آخر بيانات محفوظة";
    $("live").classList.add("off");
-   $("updated").textContent="تعذر جلب تحديث جديد";
+   $("updated").textContent = "تعذر جلب تحديث جديد";
    render();
   }else{
-   $("live").textContent="تعذر الاتصال";
+   $("live").textContent = "تعذر الاتصال";
    $("live").classList.add("off");
-   $("desc").textContent="تعذر جلب بيانات الطقس";
-   $("alert").hidden=false;
-   $("alert").textContent="لا توجد بيانات حديثة حالياً. تحقق من الاتصال بالإنترنت وحاول التحديث.";
+   $("desc").textContent = "تعذر جلب بيانات الطقس";
+   $("alert").hidden = false;
+   $("alert").textContent = "لا توجد بيانات حديثة حالياً. تحقق من الاتصال بالإنترنت وحاول التحديث.";
   }
 
   clearTimeout(retryTimer);
-  retryTimer=setTimeout(load,60000);
+  retryTimer = setTimeout(load,60000);
 
  }finally{
-  loading=false;
+  loading = false;
  }
 }
 
 function row(ico,label,value,detail){
  return `<details class="row">
- <summary><span class="ri">${ico}</span>
+ <summary>
+ <span class="ri">${ico}</span>
  <span class="rl">${label}<i>•</i>${value}</span>
- <span class="ch">⌄</span></summary>
- <div class="rd">${detail}</div></details>`;
+ <span class="ch">⌄</span>
+ </summary>
+ <div class="rd">${detail}</div>
+ </details>`;
 }
 
 function directionText(deg){
- if(!finite(deg))return"غير متوفر";
- const names=["شمالية","شمالية شرقية","شرقية","جنوبية شرقية",
- "جنوبية","جنوبية غربية","غربية","شمالية غربية"];
+ if(!finite(deg))return "غير متوفر";
+
+ const names = [
+  "شمالية","شمالية شرقية","شرقية","جنوبية شرقية",
+  "جنوبية","جنوبية غربية","غربية","شمالية غربية"
+ ];
+
  return names[Math.round(deg/45)%8];
 }
 
 function uvText(v){
- if(!finite(v))return"غير متوفر";
- if(v<3)return"منخفض";
- if(v<6)return"معتدل";
- if(v<8)return"مرتفع";
- if(v<11)return"مرتفع جداً";
- return"شديد";
+ if(!finite(v))return "غير متوفر";
+ if(v<3)return "منخفض";
+ if(v<6)return "معتدل";
+ if(v<8)return "مرتفع";
+ if(v<11)return "مرتفع جداً";
+ return "شديد";
 }
 
 function render(){
  if(!S)return;
- const c=S.current;
- const w=weather(c.code);
- const night=c.isDay===0;
 
- $("ico").innerHTML=icon(w[0],night,48);
- $("temp").textContent=Math.round(c.temp)+"°";
- $("desc").textContent=w[1];
- $("feels").textContent="الحرارة المحسوسة: "+Math.round(c.feels)+"°";
- $("hum").textContent=finite(c.humidity)?Math.round(c.humidity)+"%":"--";
- $("wind").textContent=finite(c.wind)?Math.round(c.wind)+" كم/س":"--";
- $("pressure").textContent=finite(c.pressure)?Math.round(c.pressure)+" hPa":"--";
+ const c = S.current;
+ const w = weather(c.code);
+ const night = c.isDay===0;
 
- $("alert").hidden=!S.alert;
- $("alert").textContent=S.alert;
- $("confidence").textContent="مستوى الثقة: "+S.confidence;
+ $("ico").innerHTML = icon(w[0],night,48);
+ $("temp").textContent = safeRound(c.temp,"°");
+ $("desc").textContent = w[1];
+ $("feels").textContent = "الحرارة المحسوسة: " + safeRound(c.feels,"°");
+
+ $("hum").textContent = safeRound(c.humidity,"%");
+ $("wind").textContent = finite(c.wind) ? Math.round(c.wind) + " كم/س" : "--";
+ $("pressure").textContent = finite(c.pressure) ? Math.round(c.pressure) + " hPa" : "--";
+
+ $("alert").hidden = !S.alert;
+ $("alert").textContent = S.alert;
+
+ $("confidence").textContent = "مستوى الثقة: " + S.confidence;
 
  renderDust(S.dust);
  renderDays();
  renderSelected();
 
- const d=S.days;
- if(d.length>=4){
-  const diff=((d[1].hi+d[2].hi+d[3].hi)/3)-d[0].hi;
-  $("tra").textContent=diff>1.5?"↗":diff<-1.5?"↘":"→";
-  $("trt").textContent="اتجاه الحرارة خلال الأيام الثلاثة المقبلة: "+
-   (diff>1.5?"ارتفاع تدريجي":diff<-1.5?"انخفاض تدريجي":"استقرار نسبي")+".";
-  $("trend").hidden=false;
+ const d = S.days;
+
+ if(d.length>=4&&finite(d[0].hi)&&finite(d[1].hi)&&finite(d[2].hi)&&finite(d[3].hi)){
+  const diff = ((d[1].hi+d[2].hi+d[3].hi)/3)-d[0].hi;
+
+  $("tra").textContent = diff>1.5 ? "↗" : diff<-1.5 ? "↘" : "→";
+
+  $("trt").textContent =
+   "اتجاه الحرارة خلال الأيام الثلاثة المقبلة: " +
+   (diff>1.5 ? "ارتفاع تدريجي" : diff<-1.5 ? "انخفاض تدريجي" : "استقرار نسبي") + ".";
+
+  $("trend").hidden = false;
  }else{
-  $("trend").hidden=true;
+  $("trend").hidden = true;
  }
 
- $("src").textContent="📡 المصدر: Open-Meteo Forecast + CAMS Air Quality · إحداثيات مركز الشرقاط";
+ $("src").textContent =
+  "📡 المصدر: Open-Meteo Forecast + CAMS Air Quality · إحداثيات مركز الشرقاط";
 }
 
 function renderDays(){
- $("days").innerHTML=S.days.map((d,i)=>{
-  const dn=i===0?"اليوم":DAYS[new Date(d.time*1000).getDay()];
+ $("days").innerHTML = S.days.map((d,i)=>{
+  const dn = i===0 ? "اليوم" : fmtWeekday.format(new Date(d.time*1000));
+
   return `<button class="d${i===SEL?" on":""}" data-i="${i}" type="button">
-  <b>${dn}</b>${icon(d.k,false,26)}
+  <b>${dn}</b>
+  ${icon(d.k,false,26)}
   <span>${d.txt}</span>
-  <em>${Math.round(d.hi)}° / <s>${Math.round(d.lo)}°</s></em>
+  <em>${safeRound(d.hi,"°")} / <s>${safeRound(d.lo,"°")}</s></em>
   <small>${finite(d.prob)?Math.round(d.prob)+"% مطر":"--"}</small>
   </button>`;
  }).join("");
 }
 
 function renderSelected(){
- const d=S.days[SEL];
+ const d = S.days[SEL];
+
  if(!d)return;
 
- const hours=hourlyDay(d,S.now);
+ const hours = hourlyDay(d,S.now);
 
- $("hs").innerHTML=hours.map((x,i)=>{
-  const w=weather(x.code);
-  const localHour=Number(new Intl.DateTimeFormat("en-GB",{
+ $("hs").innerHTML = hours.map((x,i)=>{
+  const w = weather(x.code);
+
+  const localHour = Number(new Intl.DateTimeFormat("en-GB",{
    timeZone:TZ,hour:"2-digit",hourCycle:"h23"
   }).format(new Date(x.time*1000)));
-  const night=localHour<6||localHour>=18;
+
+  const night = localHour<6 || localHour>=18;
 
   return `<div class="h">
-  <b>${Math.round(x.temp)}°</b>
+  <b>${safeRound(x.temp,"°")}</b>
   ${icon(w[0],night,26)}
   <small>${finite(x.prob)&&x.prob>=20?"💧"+Math.round(x.prob)+"%":""}</small>
   <span>${i===0&&SEL===0?"الآن":fmtHour.format(new Date(x.time*1000))}</span>
   </div>`;
  }).join("");
 
- const total=finite(d.rain)?d.rain:0;
- const rainProb=finite(d.prob)?Math.round(d.prob)+"%":"غير متوفر";
+ const total = finite(d.rain) ? d.rain : 0;
+ const rainProb = finite(d.prob) ? Math.round(d.prob)+"%" : "غير متوفر";
 
- const rainDetail=
- "إجمالي الهطول المتوقع خلال اليوم: "+total.toFixed(1)+" ملم."+
- " أعلى احتمال مطر يومي: "+rainProb+
- ". الكمية والاحتمال قيم تنبؤية وليستا ضماناً للهطول.";
+ const rainDetail =
+  "إجمالي الهطول المتوقع خلال اليوم: " + total.toFixed(1) + " ملم. " +
+  "أعلى احتمال مطر يومي: " + rainProb +
+  ". الكمية والاحتمال قيم تنبؤية وليستا ضماناً للهطول.";
 
- const windDetail=
- "أقصى سرعة رياح متوقعة: "+Math.round(d.wind)+" كم/س."+
- " هبات الرياح: "+Math.round(d.gust)+" كم/س."+
- " الاتجاه السائد: "+directionText(d.direction)+".";
+ const windDetail =
+  "أقصى سرعة رياح متوقعة: " + safeRound(d.wind," كم/س") + ". " +
+  "هبات الرياح: " + safeRound(d.gust," كم/س") + ". " +
+  "الاتجاه السائد: " + directionText(d.direction) + ".";
 
- const current=SEL===0?S.current:null;
- const validHum=hours.filter(x=>finite(x.humidity));
- const validPressure=hours.filter(x=>finite(x.pressure));
+ const current = SEL===0 ? S.current : null;
 
- const hum=current?current.humidity:
-  validHum.length?validHum.reduce((a,x)=>a+x.humidity,0)/validHum.length:NaN;
+ const validHum = hours.filter(x=>finite(x.humidity));
+ const validPressure = hours.filter(x=>finite(x.pressure));
 
- const pressure=current?current.pressure:
-  validPressure.length?validPressure.reduce((a,x)=>a+x.pressure,0)/validPressure.length:NaN;
+ const hum = current
+  ? current.humidity
+  : validHum.length
+   ? validHum.reduce((a,x)=>a+x.humidity,0)/validHum.length
+   : NaN;
 
- const uv=finite(d.uv)?d.uv:NaN;
- const visibility=hours.filter(x=>finite(x.visibility)).map(x=>x.visibility);
- const minVis=visibility.length?Math.min(...visibility):NaN;
+ const pressure = current
+  ? current.pressure
+  : validPressure.length
+   ? validPressure.reduce((a,x)=>a+x.pressure,0)/validPressure.length
+   : NaN;
 
- $("rows").innerHTML=
- row("🌧️","الأمطار",rainProb,rainDetail)+
- row("💨","الرياح",Math.round(d.wind)+" كم/س",windDetail)+
- row("💧","الرطوبة",finite(hum)?Math.round(hum)+"%":"--",
- "الرطوبة الحالية أو متوسط القيم الساعية المتاحة.")+
- row("🌡️","الحرارة المحسوسة",
- Math.round(SEL===0?S.current.feels:d.appHi)+"°",
- "العظمى المحسوسة: "+Math.round(d.appHi)+"°، والصغرى المحسوسة: "+Math.round(d.appLo)+"°.")+
- row("☀️","الأشعة فوق البنفسجية",
- finite(uv)?Math.round(uv)+" · "+uvText(uv):"--",
- "أقصى مؤشر أشعة فوق بنفسجية متوقع خلال النهار.")+
- row("🧭","الضغط الجوي",
- finite(pressure)?Math.round(pressure)+" hPa":"--",
- "الضغط الجوي عند مستوى سطح البحر.")+
- row("👁️","مدى الرؤية",
- finite(minVis)?(minVis/1000).toFixed(1)+" كم":"--",
- "أقل مدى رؤية ضمن الساعات المتوفرة، وقد يتأثر بالضباب والغبار.")+
- row("🌅","الشروق والغروب",
- timeLabel(d.sunrise)+" · "+timeLabel(d.sunset),
- "مواعيد الشروق والغروب حسب الموقع والتوقيت المحلي.")+
- row("⛈️","مؤشرات عدم الاستقرار",
- hours.some(x=>finite(x.cape))?
- Math.max(0,...hours.map(x=>finite(x.cape)?x.cape:0)).toFixed(0)+" J/kg":"غير متوفر",
- "أعلى قيمة CAPE في التوقعات الساعية. ارتفاعها قد يشير إلى قابلية الحمل الحراري، لكنه لا يؤكد حدوث العواصف.");
+ const uv = finite(d.uv) ? d.uv : NaN;
+
+ const visibility = hours
+  .filter(x=>finite(x.visibility))
+  .map(x=>x.visibility);
+
+ const minVis = visibility.length ? Math.min(...visibility) : NaN;
+
+ const feels = SEL===0 ? S.current.feels : d.appHi;
+
+ const feelsDetail =
+  "العظمى المحسوسة: " + safeRound(d.appHi,"°") +
+  "، والصغرى المحسوسة: " + safeRound(d.appLo,"°") + ".";
+
+ const capeValues = hours.map(x=>x.cape).filter(finite);
+ const maxCape = capeValues.length ? Math.max(...capeValues) : NaN;
+
+ $("rows").innerHTML =
+  row("🌧️","الأمطار",rainProb,rainDetail) +
+
+  row("💨","الرياح",safeRound(d.wind," كم/س"),windDetail) +
+
+  row("💧","الرطوبة",safeRound(hum,"%"),
+   "الرطوبة الحالية أو متوسط القيم الساعية المتاحة.") +
+
+  row("🌡️","الحرارة المحسوسة",safeRound(feels,"°"),feelsDetail) +
+
+  row("☀️","الأشعة فوق البنفسجية",
+   finite(uv)?Math.round(uv)+" · "+uvText(uv):"--",
+   "أقصى مؤشر أشعة فوق بنفسجية متوقع خلال النهار.") +
+
+  row("🧭","الضغط الجوي",
+   finite(pressure)?Math.round(pressure)+" hPa":"--",
+   "الضغط الجوي عند مستوى سطح البحر.") +
+
+  row("👁️","مدى الرؤية",
+   finite(minVis)?(minVis/1000).toFixed(1)+" كم":"--",
+   "أقل مدى رؤية ضمن الساعات المتوفرة، وقد يتأثر بالضباب والغبار.") +
+
+  row("🌅","الشروق والغروب",
+   timeLabel(d.sunrise)+" · "+timeLabel(d.sunset),
+   "مواعيد الشروق والغروب حسب الموقع والتوقيت المحلي.") +
+
+  row("⛈️","مؤشرات عدم الاستقرار",
+   finite(maxCape)?maxCape.toFixed(0)+" J/kg":"غير متوفر",
+   "أعلى قيمة CAPE في التوقعات الساعية. ارتفاعها قد يشير إلى قابلية الحمل الحراري، لكنه لا يؤكد حدوث العواصف.");
 }
 
+/* اختيار اليوم */
 $("days").addEventListener("click",e=>{
- const b=e.target.closest(".d");
+ const b = e.target.closest(".d");
+
  if(!b)return;
- SEL=Number(b.dataset.i);
+
+ SEL = Number(b.dataset.i);
+
+ if(!Number.isInteger(SEL)||SEL<0||SEL>=S.days.length)return;
+
  renderDays();
  renderSelected();
 });
 
+/* زر التحديث */
 $("ref").addEventListener("click",()=>{
  $("ref").classList.remove("spin");
  void $("ref").offsetWidth;
@@ -719,28 +853,36 @@ $("ref").addEventListener("click",()=>{
  load();
 });
 
+/* تحديث عند العودة إلى الصفحة */
 document.addEventListener("visibilitychange",()=>{
  if(!document.hidden)load();
 });
 
+/* التحديث الأول */
 load();
+
+/* تحديث تلقائي كل 20 دقيقة */
 setInterval(load,20*60*1000);
+
+/* إعادة المحاولة عند عودة الإنترنت */
 window.addEventListener("online",load);
 
-if("ResizeObserver"in window){
+/* ضبط ارتفاع الصفحة عند عرضها داخل إطار */
+if("ResizeObserver" in window){
  new ResizeObserver(()=>{
-  if(parent!==window){
-   parent.postMessage({
+  if(window.parent!==window){
+   window.parent.postMessage({
     wxHeight:Math.ceil(document.documentElement.scrollHeight)
    },"*");
   }
  }).observe($("wrap"));
 }
 
-if("serviceWorker"in navigator){
+/* تشغيل Service Worker */
+if("serviceWorker" in navigator){
  window.addEventListener("load",()=>{
   navigator.serviceWorker.register("./sw.js")
-  .catch(e=>console.warn("Service Worker:",e));
+   .catch(e=>console.warn("Service Worker:",e));
  });
 }
 </script>
